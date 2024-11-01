@@ -1,0 +1,25 @@
+FROM picoded/ubuntu-base
+
+## setup env ##
+
+# install python
+RUN apt-get update
+RUN apt-get install python
+
+# check for installation
+RUN python --version
+
+# create workdir
+RUN mkdir app/
+
+# change workdir
+WORKDIR /app/
+
+# copy requirements
+COPY requirements.txt .
+
+# install dependencies
+RUN pip install -r requirements.txt
+
+# copy all
+COPY . .
