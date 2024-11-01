@@ -1,0 +1,32 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: tablut_server
+    ports:
+      - "5800:5800"  # white port
+      - "5801:5801" # black port
+    command: ant server
+    restart: on-failure
+    networks:
+      - tablut_network
+
+  client:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.client
+    image: rl-client
+    container_name: tablut_client
+    depends_on:
+      - server  # Ensure server starts before client
+    environment:
+      - SERVER_HOST=server
+      - SERVER_PORT=${SERVER_PORT}
+    command: python main.py
+    networks:
+      - tablut_network
+
+networks:
+  tablut_network:
+    driver: bridge
