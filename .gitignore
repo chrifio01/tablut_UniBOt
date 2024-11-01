@@ -163,3 +163,7 @@ cython_debug/
 
 # ignore .github folder
 .github/
+
+
+# vs code
+.vscode/
