@@ -1,4 +1,4 @@
-FROM balenalib/amd64-ubuntu-python:latest
+FROM balenalib/amd64-ubuntu-python:3.9.13
 
 # create workdir
 RUN mkdir app/
