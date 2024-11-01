@@ -1,0 +1,16 @@
+FROM balenalib/amd64-ubuntu-python:latest
+
+# create workdir
+RUN mkdir app/
+
+# change workdir
+WORKDIR /app/
+
+# copy requirements
+COPY ../requirements.txt .
+
+# install dependencies
+RUN pip install -r requirements.txt
+
+# copy all
+COPY . .
