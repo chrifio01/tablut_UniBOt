@@ -1,0 +1,21 @@
+FROM picoded/ubuntu-openjdk-8-jdk
+
+# change user
+USER root
+
+# change timezone setting
+RUN export TIMEZONE="GMT+01"
+
+# install git
+RUN sudo apt-get update
+RUN sudo apt-get install git
+
+# clone tablut server repo
+RUN git clone https://github.com/AGalassi/TablutCompetition.git
+
+# change workdir
+WORKDIR /TablutCompetition/Tablut
+
+# compile the project
+RUN ant clean
+RUN ant compile
