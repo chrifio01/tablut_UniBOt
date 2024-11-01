@@ -7,12 +7,12 @@ services:
     ports:
       - "5800:5800"  # white port
       - "5801:5801" # black port
-    command: ant server
+    entrypoint: ant server
     restart: on-failure
     networks:
       - tablut_network
 
-  our_player:
+  opponent:
     # build:
     #   context: .
     #   dockerfile: Dockerfile.client
@@ -24,10 +24,13 @@ services:
     #   - SERVER_HOST=server
     #   - SERVER_PORT=${PLAYER_SERVER_PORT}
     # command: python main.py
+    ports:
+      - "5800:5800"  # white port
+      - "5801:5801" # black port
     networks:
       - tablut_network
 
-  opponent:
+  our_player:
     build:
       context: ..
       dockerfile: docker/Dockerfile.client
@@ -38,6 +41,9 @@ services:
     environment:
       - SERVER_HOST=server
       - SERVER_PORT=${OPPONENT_SERVER_PORT}
+    ports:
+      - "5800:5800"  # white port
+      - "5801:5801" # black port
     command: python main.py
     networks:
       - tablut_network

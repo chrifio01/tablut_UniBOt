@@ -10,7 +10,11 @@ WORKDIR /app/
 COPY ../requirements.txt .
 
 # install dependencies
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt --no-cache-dir
 
 # copy all
 COPY . .
+
+# expose ports
+EXPOSE 5800
+EXPOSE 5801

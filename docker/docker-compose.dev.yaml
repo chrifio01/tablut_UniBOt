@@ -7,7 +7,7 @@ services:
     ports:
       - "5800:5800"  # white port
       - "5801:5801" # black port
-    command: ant server
+    entrypoint: ant server
     restart: on-failure
     networks:
       - tablut_network
@@ -23,6 +23,9 @@ services:
     environment:
       - SERVER_HOST=server
       - SERVER_PORT=${SERVER_PORT}
+    ports:
+      - "5800:5800"  # white port
+      - "5801:5801" # black port
     command: python main.py
     networks:
       - tablut_network
