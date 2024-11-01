@@ -1,13 +1,4 @@
-FROM picoded/ubuntu-base
-
-## setup env ##
-
-# install python
-RUN apt-get update
-RUN apt-get install python
-
-# check for installation
-RUN python --version
+FROM balenalib/amd64-ubuntu-python:latest
 
 # create workdir
 RUN mkdir app/
@@ -16,7 +7,7 @@ RUN mkdir app/
 WORKDIR /app/
 
 # copy requirements
-COPY requirements.txt .
+COPY ../requirements.txt .
 
 # install dependencies
 RUN pip install -r requirements.txt
