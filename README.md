@@ -21,7 +21,7 @@ cd <your-repo-directory>
 Use Docker Compose to set up and run the bot in development mode. The bot requires environment variables to be passed when starting the Docker container, including:
 
 ```plaintext
-    PLAYER_COLOR: Set to WHITE or BLACK (case-sensitive).
+    PLAYER_COLOR: Set to WHITE or BLACK (case-insensitive).
     TIMEOUT: Set to a positive integer (e.g., 60).
     SERVER_IP: Set to the IP address of the server.
 ```
