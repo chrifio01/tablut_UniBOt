@@ -15,6 +15,9 @@ RUN pip install -r requirements.txt --no-cache-dir
 # copy all
 COPY . .
 
+# make the script executable
+RUN chmod +x runmyplayer.sh
+
 # expose ports
 EXPOSE 5800
 EXPOSE 5801
