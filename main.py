@@ -1,3 +1,7 @@
+"""
+    Entrypoint for the TablutClient.
+"""
+
 import os
 
 PLAYER_COLOR = os.environ['PLAYER_COLOR']
