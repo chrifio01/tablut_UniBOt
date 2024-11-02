@@ -24,9 +24,9 @@ services:
       - SERVER_HOST=server
       - SERVER_PORT=${SERVER_PORT}
     ports:
-      - "5800:5800"  # white port
-      - "5801:5801" # black port
-    command: python main.py
+      - "5802:5800"  # white port
+      - "5803:5801" # black port
+    entrypoint: ./runmyplayer.sh $PLAYER_COLOR $TIMEOUT $SERVER_IP
     networks:
       - tablut_network
 
