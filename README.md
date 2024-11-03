@@ -39,7 +39,7 @@ docker compose -f docker/docker-compose.dev.yaml build
 Once the image is built, you can start the bot using Docker Compose and passing in the required environment variables:
 
 ```sh
-PLAYER_COLOR=WHITE TIMEOUT=60 SERVER_IP=192.168.1.1 docker compose -f docker/docker-compose.dev.yaml up client
+PLAYER_COLOR=WHITE TIMEOUT=60 docker compose -f docker/docker-compose.dev.yaml up client
 ```
 
 # Run both Tablut server and Model in Development
@@ -47,7 +47,7 @@ PLAYER_COLOR=WHITE TIMEOUT=60 SERVER_IP=192.168.1.1 docker compose -f docker/doc
 Once the image is built, you can start the bot using Docker Compose and passing in the required environment variables:
 
 ```sh
-PLAYER_COLOR=WHITE TIMEOUT=60 SERVER_IP=192.168.1.1 docker compose -f docker/docker-compose.dev.yaml up
+PLAYER_COLOR=WHITE TIMEOUT=60 docker compose -f docker/docker-compose.dev.yaml up
 ```
 
 ## Explanation of Environment Variables
