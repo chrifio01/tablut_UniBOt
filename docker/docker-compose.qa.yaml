@@ -10,7 +10,8 @@ services:
     entrypoint: ant server
     restart: on-failure
     networks:
-      - tablut_network
+      tablut_network:
+        ipv4_address: ${SERVER_IP}
 
   opponent:
     # build:
@@ -20,9 +21,6 @@ services:
     # container_name: tablut_client
     # depends_on:
     #   - server  # Ensure server starts before client
-    # environment:
-    #   - SERVER_HOST=server
-    #   - SERVER_PORT=${PLAYER_SERVER_PORT}
     # command: python main.py
     ports:
       - "5804:5800"  # white port
@@ -38,9 +36,6 @@ services:
     container_name: tablut_client
     depends_on:
       - server  # Ensure server starts before client
-    environment:
-      - SERVER_HOST=server
-      - SERVER_PORT=${OPPONENT_SERVER_PORT}
     ports:
       - "5802:5800"  # white port
       - "5803:5801" # black port
@@ -51,3 +46,6 @@ services:
 networks:
   tablut_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_MASK}
