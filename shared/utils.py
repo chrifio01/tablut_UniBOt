@@ -20,6 +20,18 @@ def strp_pieces(board_str: str) -> Annotated[List[List[Piece]], "The correspondi
         pieces.append([Piece(ch) for ch in row])
     return pieces
 
+class Color(Enum):
+    """
+    Enum representing the colors of the pieces in Tablut.
+    """
+    WHITE ='W'
+    BLACK ='B'
+    
+class Action(BaseModel):
+    from_: str
+    to_: str
+    turn: Color
+ 
 class Board:
     """
     Model class representing the game board in Tablut.
@@ -51,13 +63,7 @@ class Board:
     def __str__(self) -> str:
         return [[p.value for p in self.__pieces[i]].join('') for i in self.__pieces].join('\n')
 
-class Color(Enum):
-    """
-    Enum representing the colors of the pieces in Tablut.
-    """
-    WHITE ='W'
-    BLACK ='B'
-    
+   
 class State(BaseModel):
     """
     Model class representing the states of the game in Tablut.
