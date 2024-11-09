@@ -71,8 +71,12 @@ class Board:
         return self.__width
     
     @property
-    def pieces(self) -> Annotated[List[List[Piece]], "The current pieces configuration as a matrix of height x width dim Piece objs"]:
+    def pieces(self) -> Annotated[np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]:
         return self.__pieces
+    
+    @pieces.setter
+    def pieces(self, new_board_state: Annotated[str, "The new pieces configuration sent from the server"]) -> None:
+        self.__pieces = __strp_board(new_board_state)
         
     def update_pieces(self, action: _Action) -> None:
         pass
