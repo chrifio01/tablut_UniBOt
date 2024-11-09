@@ -1,8 +1,13 @@
 from pydantic import BaseModel
 from typing import Annotated, List
-from ..consts import INITIAL_BOARD_STATE
+from ..consts import INITIAL_STATE
 import numpy as np
+from .game_utils import *
 
+class Action(BaseModel):
+    from_: str
+    to_: str
+    turn: Color
 class __Board:
     """
     Model class representing the game board in Tablut.
@@ -61,8 +66,3 @@ def strp_state(state_str: str) -> Annotated[State, "The corresponding state from
     for row in board_str.split('\n'):
         pieces.append([Piece(ch) for ch in row])
     return pieces
-
-class Action(BaseModel):
-    from_: str
-    to_: str
-    turn: Color
