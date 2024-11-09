@@ -5,7 +5,7 @@ import numpy as np
 import json
 import string
 
-__all__ = ['Color', 'Piece', 'Board', '_Action', 'strp_board', 'strf_square']
+__all__ = ['Color', 'Piece', 'Board', '_Action', 'strp_board', 'strf_square', 'strp_square']
 
 class Color(Enum):
     """
@@ -41,9 +41,9 @@ class Piece(Enum):
 def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:    
     return np.array([list(row) for row in board_str.split('\n')[:-1]], dtype=Piece)
 
-def __strp_square(square_str: str) -> Tuple[int, int]:
+def strp_square(square_str: str) -> Tuple[int, int]:
     column= list(range(ord('a'), ord('z') + 1)).index(square_str[0].lower())
-    row = int(square_str[1:]) - 1  # adjusting to 0-based indexing
+    row = int(square_str[1]) - 1  # adjusting to 0-based indexing
     return column, row
 
 def strf_square(position: Tuple[int, int]) -> str:
@@ -90,11 +90,14 @@ class Board:
         self.__pieces = strp_board(new_board_state)
         
     def update_pieces(self, action: _Action) -> None:
-        from_indexes = __strp_square(action.from_)
-        to_indexes = __strp_square(action.to_)
+        from_indexes = strp_square(action.from_)
+        to_indexes = strp_square(action.to_)
         moving_piece = self.__pieces[from_indexes]
         self.__pieces[from_indexes] = Piece.EMPTY
         self.__pieces[to_indexes] = moving_piece
+        
+    def get_piece(self, position: Tuple[int, int]) -> Piece:
+        return self.__pieces[position]
     
     def __str__(self) -> str:
         return [[p.value for p in self.__pieces[i]].join('') for i in self.__pieces].join('\n')
