@@ -38,17 +38,19 @@ class Piece(Enum):
     THRONE = 'T'
     EMPTY = 'O'
 
-def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:    
-    return np.array([list(row) for row in board_str.split('\n')[:-1]], dtype=Piece)
+def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:
+    rows = board_str.strip().split('\n')
+    board_array = np.array([[Piece(char) for char in row] for row in rows], dtype=Piece)
+    return board_array
 
 def strp_square(square_str: str) -> Tuple[int, int]:
-    column= list(range(ord('a'), ord('z') + 1)).index(square_str[0].lower())
-    row = int(square_str[1]) - 1  # adjusting to 0-based indexing
+    column= list(range(ord('a'), ord('z') + 1)).index(square_str[1].lower())
+    row = int(square_str[0]) - 1  # adjusting to 0-based indexing
     return column, row
 
 def strf_square(position: Tuple[int, int]) -> str:
-    column = string.ascii_lowercase[position[0]]
-    row = position[1] + 1
+    column = string.ascii_lowercase[position[1]]
+    row = position[0] + 1
     return f"{column}{row}"
 
 class Board:
@@ -59,18 +61,18 @@ class Board:
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
-            cls._instance = super(Board, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(Board, cls).__new__(cls)
         return cls._instance
     
     def __init__(
             self, 
-            initial_board_state: Annotated[str, "The initial pieces configuration"]
+            initial_board_state: Annotated[np.ndarray, "The initial pieces configuration as a 2D np array referenced as (col, row) pairs"]
         ):
         if not hasattr(self, '_initialized'):
             shape = initial_board_state.shape
-            self.__height = shape[1]    # first index is the column
-            self.__width = shape[0]     # second index is the row
-            self.__pieces = strp_board(initial_board_state)
+            self.__height = shape[0]    # first index is the row
+            self.__width = shape[1]     # second index is the column
+            self.__pieces = initial_board_state
             self._initialized = True
     
     @property
@@ -86,8 +88,8 @@ class Board:
         return self.__pieces
     
     @pieces.setter
-    def pieces(self, new_board_state: Annotated[str, "The new pieces configuration sent from the server"]) -> None:
-        self.__pieces = strp_board(new_board_state)
+    def pieces(self, new_board_state: Annotated[np.ndarray, "The new pieces configuration sent from the server converted in np.array"]) -> None:
+        self.__pieces = new_board_state
         
     def update_pieces(self, action: _Action) -> None:
         from_indexes = strp_square(action.from_)

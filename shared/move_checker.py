@@ -7,9 +7,9 @@ import numpy as np
 class MoveChecker:
     
     @staticmethod
-    def __is_camp(col: int, row: int) -> bool:
+    def __is_camp(row: int, col: int) -> bool:
         """Returns True if the position is a camp."""
-        return (col, row) in CAMPS
+        return (row, col) in CAMPS
 
     @classmethod
     def __check_for_jumps(cls, state: State, action_from: Tuple[int, int], action_to: Tuple[int, int]) -> None:
@@ -47,7 +47,7 @@ class MoveChecker:
         for pos in range(start + step, end, step):
             current_position = (fixed, pos) if is_horizontal_move else (pos, fixed)
             pawn = board.get_piece(current_position)
-            is_citadel_pos = cls.__is_camp(current_position)
+            is_camp_pos = cls.__is_camp(*current_position)
 
             # Check if jumping over non-empty spaces or throne
             if pawn != Piece.EMPTY:
@@ -56,7 +56,7 @@ class MoveChecker:
                 raise InvalidAction("Cannot jump over a pawn.")
 
             # Check for improper citadel jumps
-            if is_citadel_pos and not cls.__is_camp(action_from):
+            if is_camp_pos and not cls.__is_camp(*action_from):
                 raise InvalidAction("Cannot jump over a camp.")
 
     @classmethod
@@ -84,11 +84,11 @@ class MoveChecker:
         turn = state.turn
 
         # Check if move is within board bounds
-        if action_to[0] >= board_width or action_to[1] >= board_height:
+        if col_to >= board_width or row_to >= board_height:
             raise InvalidAction(f"Move {move.to_} is outside board bounds.")
 
         # Check for throne (center position in 9x9 Ashton Tablut is (4,4))
-        if action_to == (board_width // 2, board_height // 2):
+        if action_to == (board_height // 2, board_width // 2):
             raise InvalidAction("Cannot move onto the throne.")
 
         # Check if destination cell is occupied
@@ -96,11 +96,11 @@ class MoveChecker:
             raise InvalidAction(f"Destination cell {action_to} is occupied.")
 
         # Camp entry check: disallow moves from outside into a camp
-        if cls.__is_camp(action_to) and not cls.__is_camp(action_from):
+        if cls.__is_camp(*action_to) and not cls.__is_camp(*action_from):
             raise InvalidAction(f"Cannot enter a camp from outside (from {action_from} to {action_to}).")
 
         # Long-distance camp move check
-        if cls.__is_camp(action_to) and cls.__is_camp(action_from):
+        if cls.__is_camp(*action_to) and cls.__is_camp(*action_from):
             if (row_from == row_to and abs(col_from - col_to) > 5) or (col_from == col_to and abs(row_from - row_to) > 5):
                 raise InvalidAction(f"Move from {action_from} to {action_to} exceeds maximum distance within camps.")
 
@@ -135,17 +135,17 @@ class MoveChecker:
         board_height = state.board.height
         board_width = state.board.width
         
-        for column, row in positions_of_movable_pieces:
+        for row, column in positions_of_movable_pieces:
             for index in range(0, board_height + 1):
                 if index == row:
                     continue
-                vertical_action = _Action(from_=strf_square((column, row)), to_=strf_square((column, index)), turn=turn)
+                vertical_action = _Action(from_=strf_square((row, column)), to_=strf_square((index, column)), turn=turn)
                 all_actions.append(vertical_action)
                 
             for index in range(0, board_width + 1):
                 if index == column:
                     continue
-                horizontal_action = _Action(from_=strf_square((column, row)), to_=strf_square((index, row)), turn=turn)
+                horizontal_action = _Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn)
                 all_actions.append(horizontal_action)
                 
         return all_actions
