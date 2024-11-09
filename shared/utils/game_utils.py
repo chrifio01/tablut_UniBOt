@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import numpy as np
 import json
 
-__all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board']
+__all__ = ['Color', 'Piece', 'Board', '_Action', 'strp_board']
 
 class Color(Enum):
     """
