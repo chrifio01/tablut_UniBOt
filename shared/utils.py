@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from pydantic import BaseModel
+from typing import Annotated
 from enum import Enum
 
 class Color(Enum):
@@ -7,6 +9,14 @@ class Color(Enum):
     """
     WHITE ='W'
     BLACK ='B'
+    
+class State(BaseModel):
+    """
+    Model class representing the states of the game in Tablut.
+    """
+    board: Annotated[Board, "The current state of the game board"]
+    turn: Annotated[Color, "The turn player color"]
+    
 
 class AbstractPlayer(ABC):
     """
