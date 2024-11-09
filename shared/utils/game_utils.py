@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Annotated, List
+from typing import Annotated, List, Tuple
 from pydantic import BaseModel
 import numpy as np
 import json
@@ -40,6 +40,11 @@ class Piece(Enum):
 def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:    
     return np.array([list(row) for row in board_str.split('\n')[:-1]], dtype=Piece)
 
+def __strp_square(square_str: str) -> Tuple[int, int]:
+    column= list(range(ord('a'), ord('z') + 1)).index(square_str[0].lower())
+    row = int(square_str[1:]) - 1  # adjusting to 0-based indexing
+    return column, row
+
 class Board:
     """
     Model class representing the game board in Tablut.
@@ -79,7 +84,11 @@ class Board:
         self.__pieces = strp_board(new_board_state)
         
     def update_pieces(self, action: _Action) -> None:
-        pass
+        from_indexes = __strp_square(action.from_)
+        to_indexes = __strp_square(action.to_)
+        moving_piece = self.__pieces[from_indexes]
+        self.__pieces[from_indexes] = Piece.EMPTY
+        self.__pieces[to_indexes] = moving_piece
     
     def __str__(self) -> str:
         return [[p.value for p in self.__pieces[i]].join('') for i in self.__pieces].join('\n')
