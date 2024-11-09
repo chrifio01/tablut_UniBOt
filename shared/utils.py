@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from typing import Annotated, List
+from .consts import INITIAL_BOARD_STATE
 from enum import Enum
 
 class Piece(Enum):
@@ -14,15 +15,19 @@ class Piece(Enum):
     EMPTY = 'O'
 
 def strp_pieces(board_str: str) -> Annotated[List[List[Piece]], "The corresponding pieces configuration from a string representation of the board"]:
+    pieces = []
+    for row in board_str.split('\n'):
+        pieces.append([Piece(ch) for ch in row])
+    return pieces
 
 class Board:
     """
     Model class representing the game board in Tablut.
     """
-    def __init__(self, initial_board_state: str, height: int = 9, width: int = 9):
+    def __init__(self, initial_board_state: str = INITIAL_BOARD_STATE, height: int = 9, width: int = 9):
         self.__height = height
         self.__width = width
-        self.__pieces 
+        self.__pieces = strp_pieces(initial_board_state)
     
     @property
     def height(self) -> int:
@@ -38,7 +43,7 @@ class Board:
     
     @pieces.setter
     def pieces(self, new_board_state: str) -> None:
-        pass
+        self.__pieces = strp_pieces(new_board_state)
         
     def update_pieces(self, action) -> None:
         pass
