@@ -1,38 +1,8 @@
-from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from typing import Annotated, List
-from .consts import INITIAL_BOARD_STATE
-from enum import Enum
+from ..consts import INITIAL_BOARD_STATE
 import numpy as np
 
-class Piece(Enum):
-    """
-    Enum representing the pieces in Tablut.
-    """
-    DEFENDER = 'W'
-    ATTACKER = 'B'
-    KING = 'K'
-    THRONE = 'T'
-    EMPTY = 'O'
-
-def strp_pieces(board_str: str) -> Annotated[List[List[Piece]], "The corresponding pieces configuration from a string representation of the board"]:
-    pieces = []
-    for row in board_str.split('\n'):
-        pieces.append([Piece(ch) for ch in row])
-    return pieces
-
-class Color(Enum):
-    """
-    Enum representing the colors of the pieces in Tablut.
-    """
-    WHITE ='W'
-    BLACK ='B'
-    
-class Action(BaseModel):
-    from_: str
-    to_: str
-    turn: Color
- 
 class __Board:
     """
     Model class representing the game board in Tablut.
@@ -84,37 +54,15 @@ class State(BaseModel):
     """
     board: Annotated[__Board, "The current state of the game board"]
     turn: Annotated[Color, "The turn player color"]
-    
 
-class AbstractPlayer(ABC):
-    """
-    Abstract base class for players in Tablut.
-    """
-    
-    @property
-    @abstractmethod
-    def current_state(self):
-        pass
-    
-    @current_state.setter
-    @abstractmethod
-    def current_state(self, new_state):
-        pass
-    
-    @property
-    @abstractmethod
-    def name(self):
-        pass
-    
-    @property
-    @abstractmethod
-    def color(self) -> Color:
-        pass
-    
-    @abstractmethod
-    def send_move(self):
-        pass
-    
-    @abstractmethod
-    def fit(self, state, *args, **kwargs):
-        pass
+
+def strp_state(state_str: str) -> Annotated[State, "The corresponding state from a string representation of the state sent from the server"]:
+    pieces = []
+    for row in board_str.split('\n'):
+        pieces.append([Piece(ch) for ch in row])
+    return pieces
+
+class Action(BaseModel):
+    from_: str
+    to_: str
+    turn: Color
