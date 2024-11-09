@@ -1,4 +1,12 @@
 from abc import ABC, abstractmethod
+from enum import Enum
+
+class Color(Enum):
+    """
+    Enum representing the colors of the pieces in Tablut.
+    """
+    WHITE ='W'
+    BLACK ='B'
 
 class AbstractPlayer(ABC):
     """
