@@ -42,7 +42,7 @@ class Board:
         pass
     
     def __str__(self) -> str:
-        return [self.__pieces[i].join('') for i in self.__pieces].join('\n')
+        return [[p.value for p in self.__pieces[i]].join('') for i in self.__pieces].join('\n')
 
 class Color(Enum):
     """
