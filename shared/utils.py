@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Annotated, List
 from .consts import INITIAL_BOARD_STATE
 from enum import Enum
+import numpy as np
 
 class Piece(Enum):
     """
@@ -32,7 +33,7 @@ class Action(BaseModel):
     to_: str
     turn: Color
  
-class Board:
+class __Board:
     """
     Model class representing the game board in Tablut.
     """
@@ -40,14 +41,18 @@ class Board:
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
-            cls._instance = super(Board, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(__Board, cls).__new__(cls, *args, **kwargs)
         return cls._instance
     
-    def __init__(self, initial_board_state: str = INITIAL_BOARD_STATE, height: int = 9, width: int = 9):
+    def __init__(
+            self, 
+            initial_board_state: Annotated[np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]
+        ):
         if not hasattr(self, '_initialized'):  # Ensures `__init__` runs only once
-            self.__height = height
-            self.__width = width
-            self.__pieces = strp_pieces(initial_board_state)
+            shape = initial_board_state.shape
+            self.__height = shape[0]
+            self.__width = shape[1]
+            self.__pieces = initial_board_state
             self._initialized = True
     
     @property
@@ -59,12 +64,12 @@ class Board:
         return self.__width
     
     @property
-    def pieces(self) -> Annotated[List[List[Piece]], "The current pieces configuration as a matrix of height x width dim"]:
+    def pieces(self) -> Annotated[List[List[Piece]], "The current pieces configuration as a matrix of height x width dim Piece objs"]:
         return self.__pieces
     
     @pieces.setter
-    def pieces(self, new_board_state: str) -> None:
-        self.__pieces = strp_pieces(new_board_state)
+    def pieces(self, new_board_state: Annotated[np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]) -> None:
+        self.__pieces = new_board_state
         
     def update_pieces(self, action: Action) -> None:
         pass
@@ -77,7 +82,7 @@ class State(BaseModel):
     """
     Model class representing the states of the game in Tablut.
     """
-    board: Annotated[Board, "The current state of the game board"]
+    board: Annotated[__Board, "The current state of the game board"]
     turn: Annotated[Color, "The turn player color"]
     
 
