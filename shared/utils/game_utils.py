@@ -13,7 +13,7 @@ class Color(Enum):
     WHITE ='W'
     BLACK ='B'
 
-class Action(BaseModel):
+class _Action(BaseModel):
     from_: str
     to_: str
     turn: Color
@@ -36,20 +36,31 @@ class Piece(Enum):
     KING = 'K'
     THRONE = 'T'
     EMPTY = 'O'
-    
+
+def __strp_board(board_str: str) -> Annotated[List[List[Piece]], "The corresponding board configuration from a string representation of the pieces sent from the server"]:    
+    return np.array([list(row) for row in board_str.split('\n')[:-1]], dtype=Piece)
+
 class Board:
     """
     Model class representing the game board in Tablut.
     """
+    _instance = None  # Class-level attribute to store the singleton instance
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(Board, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
     
     def __init__(
             self, 
-            initial_board_state: Annotated[np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]
+            initial_board_state: Annotated[str, "The initial pieces configuration"]
         ):
-        shape = initial_board_state.shape
-        self.__height = shape[0]
-        self.__width = shape[1]
-        self.__pieces = initial_board_state
+        if not hasattr(self, '_initialized'):
+            shape = initial_board_state.shape
+            self.__height = shape[0]
+            self.__width = shape[1]
+            self.__pieces = __strp_board(initial_board_state)
+            self._initialized = True
     
     @property
     def height(self) -> int:
@@ -63,7 +74,7 @@ class Board:
     def pieces(self) -> Annotated[List[List[Piece]], "The current pieces configuration as a matrix of height x width dim Piece objs"]:
         return self.__pieces
         
-    def update_pieces(self, action: Action) -> None:
+    def update_pieces(self, action: _Action) -> None:
         pass
     
     def __str__(self) -> str:
