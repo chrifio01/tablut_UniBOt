@@ -3,6 +3,34 @@ from pydantic import BaseModel
 from typing import Annotated
 from enum import Enum
 
+class Board:
+    """
+    Model class representing the game board in Tablut.
+    """
+    def __init__(self, initial_board_state: str, height: int = 9, width: int = 9):
+    
+    @property
+    def height(self):
+        return self.__height
+    
+    @property
+    def width(self):
+        return self.__width
+    
+    @property
+    def pieces(self):
+        return self.__pieces
+    
+    @pieces.setter
+    def pieces(self, new_pieces):
+        self.__pieces = new_pieces
+        
+    def update_pieces(self, action) -> None:
+        pass
+    
+    def __str__(self):
+        return [self.__pieces[i].join('') for i in self.__pieces].join('\n')
+
 class Color(Enum):
     """
     Enum representing the colors of the pieces in Tablut.
