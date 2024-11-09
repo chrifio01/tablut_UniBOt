@@ -18,6 +18,8 @@ def strp_state(state_str: str) -> Annotated[State, "The corresponding state from
     board_state_str = splitted_state_str[0]
     turn_str = splitted_state_str[1][-1] # cause the string starts with \n
     
-    pieces = np.array([list(row) for row in board_state_str.split('\n')[:-1]], dtype=Piece)
+    pieces = strp_board(board_state_str)
+    board = Board(pieces)
+    board.pieces = pieces # if it's not the initial state the singleton won't set the passed pieces configuration
     
-    return State(board=Board(pieces), turn=Color(turn_str))
+    return State(board=board, turn=Color(turn_str))

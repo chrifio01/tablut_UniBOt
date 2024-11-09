@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import numpy as np
 import json
 
-__all__ = ['Color', 'Piece', 'Board', 'Action']
+__all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board']
 
 class Color(Enum):
     """
@@ -37,7 +37,7 @@ class Piece(Enum):
     THRONE = 'T'
     EMPTY = 'O'
 
-def __strp_board(board_str: str) -> Annotated[List[List[Piece]], "The corresponding board configuration from a string representation of the pieces sent from the server"]:    
+def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:    
     return np.array([list(row) for row in board_str.split('\n')[:-1]], dtype=Piece)
 
 class Board:
@@ -59,7 +59,7 @@ class Board:
             shape = initial_board_state.shape
             self.__height = shape[0]
             self.__width = shape[1]
-            self.__pieces = __strp_board(initial_board_state)
+            self.__pieces = strp_board(initial_board_state)
             self._initialized = True
     
     @property
@@ -76,7 +76,7 @@ class Board:
     
     @pieces.setter
     def pieces(self, new_board_state: Annotated[str, "The new pieces configuration sent from the server"]) -> None:
-        self.__pieces = __strp_board(new_board_state)
+        self.__pieces = strp_board(new_board_state)
         
     def update_pieces(self, action: _Action) -> None:
         pass
