@@ -7,24 +7,20 @@ class AbstractPlayer(ABC):
     """
     
     @property
-    @abstractmethod
     def current_state(self):
-        pass
+        return self.__current_state
     
     @current_state.setter
-    @abstractmethod
     def current_state(self, new_state):
-        pass
+        self.__current_state = new_state
     
     @property
-    @abstractmethod
     def name(self):
-        pass
+        return self.__name
     
     @property
-    @abstractmethod
     def color(self) -> Color:
-        pass
+        return self.__color
     
     @abstractmethod
     def send_move(self):
