@@ -13,6 +13,8 @@ class Piece(Enum):
     THRONE = 'T'
     EMPTY = 'O'
 
+def strp_pieces(board_str: str) -> Annotated[List[List[Piece]], "The corresponding pieces configuration from a string representation of the board"]:
+
 class Board:
     """
     Model class representing the game board in Tablut.
