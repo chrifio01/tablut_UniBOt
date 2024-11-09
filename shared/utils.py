@@ -36,10 +36,19 @@ class Board:
     """
     Model class representing the game board in Tablut.
     """
+    _instance = None  # Class-level attribute to store the singleton instance
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(Board, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+    
     def __init__(self, initial_board_state: str = INITIAL_BOARD_STATE, height: int = 9, width: int = 9):
-        self.__height = height
-        self.__width = width
-        self.__pieces = strp_pieces(initial_board_state)
+        if not hasattr(self, '_initialized'):  # Ensures `__init__` runs only once
+            self.__height = height
+            self.__width = width
+            self.__pieces = strp_pieces(initial_board_state)
+            self._initialized = True
     
     @property
     def height(self) -> int:
