@@ -5,6 +5,8 @@ import numpy as np
 from .game_utils import *
 import json
 
+__all__ = ['State', 'strp_state']
+
 class State(BaseModel):
     """
     Model class representing the states of the game in Tablut.
