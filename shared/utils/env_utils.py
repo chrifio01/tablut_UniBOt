@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Annotated, List
 from ..consts import INITIAL_STATE
 import numpy as np
@@ -11,6 +11,8 @@ class State(BaseModel):
     """
     Model class representing the states of the game in Tablut.
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     board: Annotated[Board, "The current state of the game board"]
     turn: Annotated[Color, "The turn player color"]
 
