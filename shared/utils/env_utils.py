@@ -19,49 +19,11 @@ class __Action(BaseModel):
             },
             indent=4
         )
-class __Board:
-    """
-    Model class representing the game board in Tablut.
-    """
-    
-    def __init__(
-            self, 
-            initial_board_state: Annotated[np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]
-        ):
-        shape = initial_board_state.shape
-        self.__height = shape[0]
-        self.__width = shape[1]
-        self.__pieces = initial_board_state
-        self._initialized = True
-    
-    @property
-    def height(self) -> int:
-        return self.__height
-    
-    @property
-    def width(self) -> int:
-        return self.__width
-    
-    @property
-    def pieces(self) -> Annotated[List[List[Piece]], "The current pieces configuration as a matrix of height x width dim Piece objs"]:
-        return self.__pieces
-    
-    @pieces.setter
-    def pieces(self, new_board_state: Annotated[np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]) -> None:
-        self.__pieces = new_board_state
-        
-    def update_pieces(self, action: __Action) -> None:
-        pass
-    
-    def __str__(self) -> str:
-        return [[p.value for p in self.__pieces[i]].join('') for i in self.__pieces].join('\n')
-
-   
 class State(BaseModel):
     """
     Model class representing the states of the game in Tablut.
     """
-    board: Annotated[__Board, "The current state of the game board"]
+    board: Annotated[Board, "The current state of the game board"]
     turn: Annotated[Color, "The turn player color"]
 
 
@@ -72,4 +34,4 @@ def strp_state(state_str: str) -> Annotated[State, "The corresponding state from
     
     pieces = np.array([list(row) for row in board_state_str.split('\n')[:-1]], dtype=Piece)
     
-    return State(board=__Board(pieces), turn=Color(turn_str))
+    return State(board=Board(pieces), turn=Color(turn_str))
