@@ -1,5 +1,7 @@
 from enum import Enum
 
+__all__ = ['Color', 'Piece']
+
 class Color(Enum):
     """
     Enum representing the colors of the pieces in Tablut.
