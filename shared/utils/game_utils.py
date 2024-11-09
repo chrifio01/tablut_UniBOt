@@ -1,8 +1,10 @@
 from enum import Enum
 from typing import Annotated, List
+from pydantic import BaseModel
 import numpy as np
+import json
 
-__all__ = ['Color', 'Piece', 'Board']
+__all__ = ['Color', 'Piece', 'Board', 'Action']
 
 class Color(Enum):
     """
@@ -10,7 +12,21 @@ class Color(Enum):
     """
     WHITE ='W'
     BLACK ='B'
+
+class Action(BaseModel):
+    from_: str
+    to_: str
+    turn: Color
     
+    def __str__(self) -> str:
+        return json.dumps(
+            {
+                "from": self.from_,
+                "to": self.to_,
+                "turn": self.turn.value
+            },
+            indent=4
+        )
 class Piece(Enum):
     """
     Enum representing the pieces in Tablut.
@@ -47,7 +63,7 @@ class Board:
     def pieces(self) -> Annotated[List[List[Piece]], "The current pieces configuration as a matrix of height x width dim Piece objs"]:
         return self.__pieces
         
-    def update_pieces(self, action: __Action) -> None:
+    def update_pieces(self, action: Action) -> None:
         pass
     
     def __str__(self) -> str:

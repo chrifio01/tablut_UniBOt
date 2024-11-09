@@ -5,20 +5,6 @@ import numpy as np
 from .game_utils import *
 import json
 
-class __Action(BaseModel):
-    from_: str
-    to_: str
-    turn: Color
-    
-    def __str__(self) -> str:
-        return json.dumps(
-            {
-                "from": self.from_,
-                "to": self.to_,
-                "turn": self.turn.value
-            },
-            indent=4
-        )
 class State(BaseModel):
     """
     Model class representing the states of the game in Tablut.
