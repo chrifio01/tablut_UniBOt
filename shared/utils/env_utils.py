@@ -23,23 +23,16 @@ class __Board:
     """
     Model class representing the game board in Tablut.
     """
-    _instance = None  # Class-level attribute to store the singleton instance
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(__Board, cls).__new__(cls, *args, **kwargs)
-        return cls._instance
     
     def __init__(
             self, 
             initial_board_state: Annotated[np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]
         ):
-        if not hasattr(self, '_initialized'):  # Ensures `__init__` runs only once
-            shape = initial_board_state.shape
-            self.__height = shape[0]
-            self.__width = shape[1]
-            self.__pieces = initial_board_state
-            self._initialized = True
+        shape = initial_board_state.shape
+        self.__height = shape[0]
+        self.__width = shape[1]
+        self.__pieces = initial_board_state
+        self._initialized = True
     
     @property
     def height(self) -> int:
@@ -73,7 +66,10 @@ class State(BaseModel):
 
 
 def strp_state(state_str: str) -> Annotated[State, "The corresponding state from a string representation of the state sent from the server"]:
-    pieces = []
-    for row in board_str.split('\n'):
-        pieces.append([Piece(ch) for ch in row])
-    return pieces
+    splitted_state_str = state_str.split('-')
+    board_state_str = splitted_state_str[0]
+    turn_str = splitted_state_str[1][-1] # cause the string starts with \n
+    
+    pieces = np.array([list(row) for row in board_state_str.split('\n')[:-1]], dtype=Piece)
+    
+    return State(board=__Board(pieces), turn=Color(turn_str))
