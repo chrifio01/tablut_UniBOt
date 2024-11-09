@@ -3,8 +3,9 @@ from typing import Annotated, List, Tuple
 from pydantic import BaseModel
 import numpy as np
 import json
+import string
 
-__all__ = ['Color', 'Piece', 'Board', '_Action', 'strp_board']
+__all__ = ['Color', 'Piece', 'Board', '_Action', 'strp_board', 'strf_square']
 
 class Color(Enum):
     """
@@ -45,6 +46,11 @@ def __strp_square(square_str: str) -> Tuple[int, int]:
     row = int(square_str[1:]) - 1  # adjusting to 0-based indexing
     return column, row
 
+def strf_square(position: Tuple[int, int]) -> str:
+    column = string.ascii_lowercase[position[0]]
+    row = position[1] + 1
+    return f"{column}{row}"
+
 class Board:
     """
     Model class representing the game board in Tablut.
@@ -62,8 +68,8 @@ class Board:
         ):
         if not hasattr(self, '_initialized'):
             shape = initial_board_state.shape
-            self.__height = shape[0]
-            self.__width = shape[1]
+            self.__height = shape[1]    # first index is the column
+            self.__width = shape[0]     # second index is the row
             self.__pieces = strp_board(initial_board_state)
             self._initialized = True
     
