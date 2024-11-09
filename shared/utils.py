@@ -57,7 +57,7 @@ class Board:
     def pieces(self, new_board_state: str) -> None:
         self.__pieces = strp_pieces(new_board_state)
         
-    def update_pieces(self, action) -> None:
+    def update_pieces(self, action: Action) -> None:
         pass
     
     def __str__(self) -> str:
