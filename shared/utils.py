@@ -30,7 +30,7 @@ class AbstractPlayer(ABC):
     
     @property
     @abstractmethod
-    def color(self):
+    def color(self) -> Color:
         pass
     
     @abstractmethod
