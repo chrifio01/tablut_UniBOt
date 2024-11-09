@@ -3,11 +3,22 @@ from typing import Annotated, List
 from ..consts import INITIAL_STATE
 import numpy as np
 from .game_utils import *
+import json
 
-class Action(BaseModel):
+class __Action(BaseModel):
     from_: str
     to_: str
     turn: Color
+    
+    def __str__(self) -> str:
+        return json.dumps(
+            {
+                "from": self.from_,
+                "to": self.to_,
+                "turn": self.turn.value
+            },
+            indent=4
+        )
 class __Board:
     """
     Model class representing the game board in Tablut.
@@ -46,7 +57,7 @@ class __Board:
     def pieces(self, new_board_state: Annotated[np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]) -> None:
         self.__pieces = new_board_state
         
-    def update_pieces(self, action: Action) -> None:
+    def update_pieces(self, action: __Action) -> None:
         pass
     
     def __str__(self) -> str:
