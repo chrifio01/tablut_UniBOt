@@ -1,34 +1,47 @@
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
-from typing import Annotated
+from typing import Annotated, List
 from enum import Enum
+
+class Piece(Enum):
+    """
+    Enum representing the pieces in Tablut.
+    """
+    DEFENDER = 'W'
+    ATTACKER = 'B'
+    KING = 'K'
+    THRONE = 'T'
+    EMPTY = 'O'
 
 class Board:
     """
     Model class representing the game board in Tablut.
     """
     def __init__(self, initial_board_state: str, height: int = 9, width: int = 9):
+        self.__height = height
+        self.__width = width
+        self.__pieces 
     
     @property
-    def height(self):
+    def height(self) -> int:
         return self.__height
     
     @property
-    def width(self):
+    def width(self) -> int:
         return self.__width
     
     @property
-    def pieces(self):
+    def pieces(self) -> Annotated[List[List[Piece]], "The current pieces configuration as a matrix of height x width dim"]:
         return self.__pieces
     
     @pieces.setter
-    def pieces(self, new_pieces):
-        self.__pieces = new_pieces
+    def pieces(self, new_board_state: str) -> None:
+        pass
         
     def update_pieces(self, action) -> None:
         pass
     
-    def __str__(self):
+    def __str__(self) -> str:
         return [self.__pieces[i].join('') for i in self.__pieces].join('\n')
 
 class Color(Enum):
