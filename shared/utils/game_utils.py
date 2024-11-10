@@ -40,7 +40,7 @@ class Piece(Enum):
 
 def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:
     rows = board_str.strip().split('\n')
-    board_array = np.array([[Piece(char) for char in row] for row in rows], dtype=Piece)
+    board_array = np.array([[Piece(char) for char in row] for row in rows[::-1]], dtype=Piece)
     return board_array
 
 def strp_square(square_str: str) -> Tuple[int, int]:
@@ -110,7 +110,12 @@ class Board:
     def update_pieces(self, action: _Action) -> None:
         from_indexes = strp_square(action.from_)
         to_indexes = strp_square(action.to_)
+        
         moving_piece = self.__pieces[from_indexes]
+        
+        if moving_piece not in (Piece.DEFENDER, Piece.ATTACKER, Piece.KING):
+            raise ValueError(f"Cannot move {moving_piece} from {action.from_} to {action.to_}.")
+            
         self.__pieces[from_indexes] = Piece.EMPTY
         self.__pieces[to_indexes] = moving_piece
         
@@ -140,4 +145,4 @@ class Board:
         return True
     
     def __str__(self) -> str:
-        return [[p.value for p in self.__pieces[i]].join('') for i in self.__pieces].join('\n')
+        return '\n'.join(''.join(piece.value for piece in row) for row in self.__pieces[::-1])
