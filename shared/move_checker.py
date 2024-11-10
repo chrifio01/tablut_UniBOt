@@ -6,8 +6,8 @@ Classes:
     MoveChecker: Contains methods for move validation and generation of possible actions.
 """
 
-import numpy as np
 from typing import List, Tuple
+import numpy as np
 from .utils import State, Action, strf_square, strp_square, Piece, Color
 from .consts import CAMPS
 from .exceptions import InvalidAction

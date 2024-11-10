@@ -27,11 +27,11 @@ Usage Example:
 """
 
 from enum import Enum
-from typing import Annotated, List, Tuple
-from pydantic import BaseModel
-import numpy as np
+from typing import Annotated, Tuple
 import json
 import string
+from pydantic import BaseModel
+import numpy as np
 
 __all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square']
 
@@ -187,7 +187,7 @@ class Board:
         Raises:
             ValueError: If there are multiple KINGs or THRONEs on the board.
         """
-        self.__class__.__check_single_king_and_throne(initial_board_state)
+        self.__class__._check_single_king_and_throne(initial_board_state)
         
         if not hasattr(self, '_initialized'):
             shape = initial_board_state.shape
@@ -226,7 +226,7 @@ class Board:
         if shape[0] > self.__height or shape[1] > self.__width:
             raise ValueError("Invalid new board state size")
         
-        self.__class__.__check_single_king_and_throne(new_board_state)
+        self.__class__._check_single_king_and_throne(new_board_state)
         
         self.__pieces = new_board_state
         
@@ -264,7 +264,7 @@ class Board:
         return self.__pieces[position]
     
     @staticmethod
-    def __check_single_king_and_throne(pieces: np.ndarray) -> bool:
+    def _check_single_king_and_throne(pieces: np.ndarray) -> bool:
         """
         Validates that there is exactly one KING and one THRONE on the board.
 
@@ -282,7 +282,7 @@ class Board:
         
         if king_count > 1:
             raise ValueError("Invalid board: more than one KING found.")
-        elif king_count == 0:
+        if king_count == 0:
             raise ValueError("Invalid board: no KING found.")
         
         if throne_count > 1:
@@ -290,7 +290,7 @@ class Board:
         
         center = pieces[pieces.shape[0] // 2][pieces.shape[1] // 2]
         
-        if center != Piece.THRONE and center != Piece.KING:
+        if center not in (Piece.THRONE, Piece.KING):
             raise ValueError("Invalid board: THRONE not in the center.")
         
         return True
