@@ -82,6 +82,22 @@ class MoveChecker:
         row_from, col_from = action_from
         row_to, col_to = action_to
         turn = state.turn
+        
+        # Check if move does not change position
+        if action_to == action_from:
+            raise InvalidAction("No movement.")
+        
+        # Check if is trying to move the throne
+        if state.board.get_piece(action_from) == Piece.THRONE:
+            raise InvalidAction("Cannot move the throne.")
+
+        # Ensure player moves only their own pieces
+        if turn == Color.WHITE:
+            if state.board.get_piece(action_from) not in [Piece.DEFENDER, Piece.KING]:
+                raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}.")
+        elif turn == Color.BLACK:
+            if state.board.get_piece(action_from) != Piece.ATTACKER:
+                raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}.")
 
         # Check if move is within board bounds
         if col_to >= board_width or row_to >= board_height:
@@ -91,10 +107,6 @@ class MoveChecker:
         if action_to == (board_height // 2, board_width // 2):
             raise InvalidAction("Cannot move onto the throne.")
 
-        # Check if destination cell is occupied
-        if state.board.get_piece(action_to) != Piece.EMPTY:
-            raise InvalidAction(f"Destination cell {action_to} is occupied.")
-
         # Camp entry check: disallow moves from outside into a camp
         if cls.__is_camp(*action_to) and not cls.__is_camp(*action_from):
             raise InvalidAction(f"Cannot enter a camp from outside (from {action_from} to {action_to}).")
@@ -103,18 +115,6 @@ class MoveChecker:
         if cls.__is_camp(*action_to) and cls.__is_camp(*action_from):
             if (row_from == row_to and abs(col_from - col_to) > 5) or (col_from == col_to and abs(row_from - row_to) > 5):
                 raise InvalidAction(f"Move from {action_from} to {action_to} exceeds maximum distance within camps.")
-
-        # Check if move does not change position
-        if action_to == action_from:
-            raise InvalidAction("No movement.")
-
-        # Ensure player moves only their own pieces
-        if turn == Color.WHITE:
-            if state.board.get_piece(action_from) not in [Piece.DEFENDER, Piece.KING]:
-                raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}.")
-        elif turn == Color.BLACK:
-            if state.board.get_piece(action_from) != Piece.ATTACKER:
-                raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}.")
 
         # No diagonal moves allowed
         if row_from != row_to and col_from != col_to:
@@ -130,19 +130,30 @@ class MoveChecker:
     def __get_all_moves(state: State) -> List[_Action]:
         all_actions = []
         turn = state.turn
-        positions_of_movable_pieces: List[Tuple[int, int]] = list(zip(*(np.where(state.board.pieces == turn))))
+        positions_of_movable_pieces: List[Tuple[int, int]] = None
         
+        if turn == Color.WHITE:
+            # Find both DEFENDER and KING pieces for the white turn
+            positions_of_movable_pieces = list(
+                zip(*np.where((state.board.pieces == Piece.DEFENDER) | (state.board.pieces == Piece.KING)))
+            )
+        else:
+            # Only find ATTACKER pieces for the black turn
+            positions_of_movable_pieces = list(
+                zip(*np.where(state.board.pieces == Piece.ATTACKER))
+            )
+    
         board_height = state.board.height
         board_width = state.board.width
         
         for row, column in positions_of_movable_pieces:
-            for index in range(0, board_height + 1):
+            for index in range(0, board_height):
                 if index == row:
                     continue
                 vertical_action = _Action(from_=strf_square((row, column)), to_=strf_square((index, column)), turn=turn)
                 all_actions.append(vertical_action)
                 
-            for index in range(0, board_width + 1):
+            for index in range(0, board_width):
                 if index == column:
                     continue
                 horizontal_action = _Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn)
