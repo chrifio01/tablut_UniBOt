@@ -76,6 +76,8 @@ class Board:
             self, 
             initial_board_state: Annotated[np.ndarray, "The initial pieces configuration as a 2D np array referenced as (col, row) pairs"]
         ):
+        self.__class__.__check_single_king_and_throne(initial_board_state)
+        
         if not hasattr(self, '_initialized'):
             shape = initial_board_state.shape
             self.__height = shape[0]    # first index is the row
@@ -97,6 +99,12 @@ class Board:
     
     @pieces.setter
     def pieces(self, new_board_state: Annotated[np.ndarray, "The new pieces configuration sent from the server converted in np.array"]) -> None:
+        shape = new_board_state.shape
+        if shape[0] > self.__height or shape[1] > self.__width:
+            raise ValueError("Invalid new board state size")
+        
+        self.__class__.__check_single_king_and_throne(new_board_state)
+        
         self.__pieces = new_board_state
         
     def update_pieces(self, action: _Action) -> None:
@@ -108,6 +116,28 @@ class Board:
         
     def get_piece(self, position: Tuple[int, int]) -> Piece:
         return self.__pieces[position]
+    
+    @staticmethod
+    def __check_single_king_and_throne(pieces: np.ndarray) -> bool:
+        # Count occurrences of KING and THRONE
+        king_count = np.count_nonzero(pieces == Piece.KING)
+        throne_count = np.count_nonzero(pieces == Piece.THRONE)
+        
+        # Ensure only one KING and one THRONE on the board
+        if king_count > 1:
+            raise ValueError("Invalid board: more than one KING found.")
+        elif king_count == 0:
+            raise ValueError("Invalid board: no KING found.")
+        
+        if throne_count > 1:
+            raise ValueError("Invalid board: more than one THRONE found.")
+        
+        center = pieces[pieces.shape[0] // 2][pieces.shape[1] // 2]
+        
+        if center != Piece.THRONE and center != Piece.KING:
+            raise ValueError("Invalid board: THRONE not in the center.")
+        
+        return True
     
     def __str__(self) -> str:
         return [[p.value for p in self.__pieces[i]].join('') for i in self.__pieces].join('\n')
