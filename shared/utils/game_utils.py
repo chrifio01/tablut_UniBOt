@@ -44,13 +44,21 @@ def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board
     return board_array
 
 def strp_square(square_str: str) -> Tuple[int, int]:
-    column= list(range(ord('a'), ord('z') + 1)).index(square_str[1].lower())
-    row = int(square_str[0]) - 1  # adjusting to 0-based indexing
-    return column, row
+    if square_str[0].lower() not in string.ascii_lowercase or square_str[1] not in string.digits:
+        raise ValueError("Invalid square format")
+    
+    column = ord(square_str[0].lower()) - ord('a')
+    row = int(square_str[1]) - 1
+    
+    return row, column
 
 def strf_square(position: Tuple[int, int]) -> str:
+    if position[1] > len(string.ascii_lowercase) - 1 or position[0] < 0:
+        raise ValueError("Invalid position")
+    
     column = string.ascii_lowercase[position[1]]
     row = position[0] + 1
+    
     return f"{column}{row}"
 
 class Board:
