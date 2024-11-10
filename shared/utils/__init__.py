@@ -10,7 +10,8 @@ It integrates different utility classes and functions:
 
 Imports:
     - State, strp_state: For handling and parsing the game state.
-    - Action, strf_square, strp_square, Piece, Color: Game-specific utilities for actions, board parsing, and game piece management.
+    - Action, strf_square, strp_square, Piece, Color: 
+        Game-specific utilities for actions, board parsing, and game piece management.
     - AbstractPlayer: The base class for creating player agents.
 """
 
