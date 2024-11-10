@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .game_utils import Color, _Action
+from .game_utils import Color, Action
 from .env_utils import State
 
 class AbstractPlayer(ABC):
@@ -28,5 +28,5 @@ class AbstractPlayer(ABC):
         pass
     
     @abstractmethod
-    def fit(self, state, *args, **kwargs) -> _Action:
+    def fit(self, state, *args, **kwargs) -> Action:
         pass

@@ -1,4 +1,4 @@
-from .utils import AbstractPlayer, Color, State, _Action
+from .utils import AbstractPlayer, Color, State, Action
 from .move_checker import MoveChecker
 import random
 
@@ -12,6 +12,6 @@ class RandomPlayer(AbstractPlayer):
     def send_move(self) -> None:
         pass
     
-    def fit(self, state, *args, **kwargs) -> _Action:
+    def fit(self, state, *args, **kwargs) -> Action:
         possible_moves = MoveChecker.get_possible_moves(state)
         return random.choice(possible_moves)

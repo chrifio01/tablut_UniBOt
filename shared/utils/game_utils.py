@@ -5,7 +5,7 @@ import numpy as np
 import json
 import string
 
-__all__ = ['Color', 'Piece', 'Board', '_Action', 'strp_board', 'strf_square', 'strp_square']
+__all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square']
 
 class Color(Enum):
     """
@@ -14,7 +14,7 @@ class Color(Enum):
     WHITE ='W'
     BLACK ='B'
 
-class _Action(BaseModel):
+class Action(BaseModel):
     from_: str
     to_: str
     turn: Color

@@ -1,9 +1,7 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Annotated, List
-from ..consts import INITIAL_STATE
+from typing import Annotated
 import numpy as np
 from .game_utils import *
-import json
 
 __all__ = ['State', 'strp_state']
 

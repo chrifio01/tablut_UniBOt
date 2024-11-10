@@ -1,4 +1,4 @@
-from .utils import State, _Action, strf_square, strp_square, Piece, Color
+from .utils import State, Action, strf_square, strp_square, Piece, Color
 from typing import List, Tuple
 from .consts import CAMPS
 from .exceptions import InvalidAction
@@ -60,13 +60,13 @@ class MoveChecker:
                 raise InvalidAction("Cannot jump over a camp.")
 
     @classmethod
-    def is_valid_move(cls, state: State, move: _Action) -> bool:
+    def is_valid_move(cls, state: State, move: Action) -> bool:
         """
         Validates if a given move complies with game rules.
 
         Args:
             state (State): The current game state.
-            move (_Action): The move to validate.
+            move (Action): The move to validate.
 
         Returns:
             bool: True if the move is valid, False otherwise.
@@ -127,8 +127,8 @@ class MoveChecker:
         return True
     
     @staticmethod
-    def __get_all_moves(state: State) -> List[_Action]:
-        all_actions = []
+    def __get_all_moves(state: State) -> List[Action]:
+        allActions = []
         turn = state.turn
         positions_of_movable_pieces: List[Tuple[int, int]] = None
         
@@ -150,17 +150,17 @@ class MoveChecker:
             for index in range(0, board_height):
                 if index == row:
                     continue
-                vertical_action = _Action(from_=strf_square((row, column)), to_=strf_square((index, column)), turn=turn)
-                all_actions.append(vertical_action)
+                verticalAction = Action(from_=strf_square((row, column)), to_=strf_square((index, column)), turn=turn)
+                allActions.append(verticalAction)
                 
             for index in range(0, board_width):
                 if index == column:
                     continue
-                horizontal_action = _Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn)
-                all_actions.append(horizontal_action)
+                horizontalAction = Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn)
+                allActions.append(horizontalAction)
                 
-        return all_actions
+        return allActions
     
     @classmethod
-    def get_possible_moves(cls, state: State) -> List[_Action]:
+    def get_possible_moves(cls, state: State) -> List[Action]:
         return list(filter(cls.is_valid_move, cls.__get_all_moves(state)))
