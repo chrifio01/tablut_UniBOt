@@ -6,9 +6,9 @@ from the list of available moves. This player extends the abstract `AbstractPlay
 class and overrides the `fit` method to make random decisions for its moves.
 """
 
+import random
 from .utils import AbstractPlayer, Color, State, Action
 from .move_checker import MoveChecker
-import random
 
 class RandomPlayer(AbstractPlayer):
     """
@@ -33,7 +33,6 @@ class RandomPlayer(AbstractPlayer):
         """
         Placeholder method for sending the move. In this case, the player doesn't need to send anything manually.
         """
-        pass
     
     def fit(self, state: State, *args, **kwargs) -> Action:
         """
