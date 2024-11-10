@@ -163,4 +163,14 @@ class MoveChecker:
     
     @classmethod
     def get_possible_moves(cls, state: State) -> List[Action]:
-        return list(filter(cls.is_valid_move, cls.__get_all_moves(state)))
+        possible_moves = cls.__get_all_moves(state)
+        moves = []
+        
+        for move in possible_moves:
+            try:
+                cls.is_valid_move(state, move)
+                moves.append(move)
+            except:
+                pass
+            
+        return moves

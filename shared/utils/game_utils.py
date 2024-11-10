@@ -110,7 +110,7 @@ class Board:
         
         self.__pieces = new_board_state
         
-    def update_pieces(self, action: _Action) -> None:
+    def update_pieces(self, action: Action) -> None:
         from_indexes = strp_square(action.from_)
         to_indexes = strp_square(action.to_)
         
