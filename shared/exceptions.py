@@ -18,4 +18,3 @@ class InvalidAction(Exception):
     according to the game's rules. It is intended to be raised when a player 
     attempts to make an illegal move or when an action violates the game's constraints.
     """
-    pass

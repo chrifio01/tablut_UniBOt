@@ -33,7 +33,12 @@ class MoveChecker:
         return (row, col) in CAMPS
 
     @classmethod
-    def __check_for_jumps(cls, state: State, action_from: Tuple[int, int], action_to: Tuple[int, int]) -> None:
+    def __check_for_jumps(
+        cls,
+        state: State,
+        action_from: Tuple[int, int],
+        action_to: Tuple[int, int]
+        ) -> None:
         """
         Checks for illegal jumps over non-empty spaces, the throne, or camps during a move.
 
@@ -43,7 +48,8 @@ class MoveChecker:
             action_to (Tuple[int, int]): The ending (row, column) position of the move.
 
         Raises:
-            InvalidAction: If jumping over a non-empty space, throne, or if improperly jumping over a camp.
+            InvalidAction: If jumping over a non-empty space, throne,
+                or if improperly jumping over a camp.
         """
         row_from, col_from = action_from
         row_to, col_to = action_to
