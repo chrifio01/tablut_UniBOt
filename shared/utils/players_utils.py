@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from .game_utils import Color
+from .game_utils import Color, _Action
+from .env_utils import State
 
 class AbstractPlayer(ABC):
     """
@@ -7,15 +8,15 @@ class AbstractPlayer(ABC):
     """
     
     @property
-    def current_state(self):
+    def current_state(self) -> State:
         return self.__current_state
     
     @current_state.setter
-    def current_state(self, new_state):
+    def current_state(self, new_state) -> None:
         self.__current_state = new_state
     
     @property
-    def name(self):
+    def name(self) -> str:
         return self.__name
     
     @property
@@ -23,9 +24,9 @@ class AbstractPlayer(ABC):
         return self.__color
     
     @abstractmethod
-    def send_move(self):
+    def send_move(self) -> None:
         pass
     
     @abstractmethod
-    def fit(self, state, *args, **kwargs):
+    def fit(self, state, *args, **kwargs) -> _Action:
         pass
