@@ -6,11 +6,11 @@ Classes:
     MoveChecker: Contains methods for move validation and generation of possible actions.
 """
 
-from .utils import State, Action, strf_square, strp_square, Piece, Color
+import numpy as np
 from typing import List, Tuple
+from .utils import State, Action, strf_square, strp_square, Piece, Color
 from .consts import CAMPS
 from .exceptions import InvalidAction
-import numpy as np
 
 class MoveChecker:
     """
@@ -107,7 +107,7 @@ class MoveChecker:
         is_valid_white_pieces = state.board.get_piece(action_from) not in [Piece.DEFENDER, Piece.KING]
         if turn == Color.WHITE and is_valid_white_pieces:
             raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}.")
-        elif turn == Color.BLACK and state.board.get_piece(action_from) != Piece.ATTACKER:
+        if turn == Color.BLACK and state.board.get_piece(action_from) != Piece.ATTACKER:
             raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}.")
 
         if col_to >= board_width or row_to >= board_height:
