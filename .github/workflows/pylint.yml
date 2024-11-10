@@ -20,7 +20,8 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pylint
-        pip install numpy, pydantic
+        pip install numpy
+        pip install pydantic
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py')
