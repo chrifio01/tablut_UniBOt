@@ -278,7 +278,7 @@ class Board:
         
         if moving_piece not in (Piece.DEFENDER, Piece.ATTACKER, Piece.KING):
             raise ValueError(f"Cannot move {moving_piece} from {action.from_} to {action.to_}.")
-        if from_indexes == (Board.width // 2, Board.height // 2) and moving_piece == Piece.KING:
+        if from_indexes == (Board.height // 2, Board.width // 2) and moving_piece == Piece.KING:
             self.__pieces[from_indexes] = Piece.THRONE
         else:
             self.__pieces[from_indexes] = Piece.EMPTY
