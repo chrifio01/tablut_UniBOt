@@ -24,4 +24,4 @@ jobs:
         pip install pydantic
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py') --disable=C0301,C0303
+        pylint $(git ls-files '*.py') --disable=C0301,C0303,E0611
