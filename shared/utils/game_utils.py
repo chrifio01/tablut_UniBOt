@@ -154,6 +154,37 @@ def strf_square(position: Tuple[int, int]) -> str:
     
     return f"{column}{row}"
 
+def __check_single_king_and_throne(pieces: np.ndarray) -> bool:
+    """
+    Validates that there is exactly one KING and one THRONE on the board.
+
+    Args:
+        pieces (np.ndarray): Board configuration to validate.
+    
+    Returns:
+        bool: True if the board is valid.
+    
+    Raises:
+        ValueError: If multiple KINGs, multiple THRONEs, or misplaced THRONE.
+    """
+    king_count = np.count_nonzero(pieces == Piece.KING)
+    throne_count = np.count_nonzero(pieces == Piece.THRONE)
+    
+    if king_count > 1:
+        raise ValueError("Invalid board: more than one KING found.")
+    if king_count == 0:
+        raise ValueError("Invalid board: no KING found.")
+    
+    if throne_count > 1:
+        raise ValueError("Invalid board: more than one THRONE found.")
+    
+    center = pieces[pieces.shape[0] // 2][pieces.shape[1] // 2]
+    
+    if center not in (Piece.THRONE, Piece.KING):
+        raise ValueError("Invalid board: THRONE not in the center.")
+    
+    return True
+
 class Board:
     """
     Singleton class representing the game board in Tablut.
@@ -187,7 +218,7 @@ class Board:
         Raises:
             ValueError: If there are multiple KINGs or THRONEs on the board.
         """
-        self.__class__._check_single_king_and_throne(initial_board_state)
+        __check_single_king_and_throne(initial_board_state)
         
         if not hasattr(self, '_initialized'):
             shape = initial_board_state.shape
@@ -226,7 +257,7 @@ class Board:
         if shape[0] > self.__height or shape[1] > self.__width:
             raise ValueError("Invalid new board state size")
         
-        self.__class__._check_single_king_and_throne(new_board_state)
+        __check_single_king_and_throne(new_board_state)
         
         self.__pieces = new_board_state
         
@@ -262,38 +293,6 @@ class Board:
             Piece: The piece located at `position`.
         """
         return self.__pieces[position]
-    
-    @staticmethod
-    def _check_single_king_and_throne(pieces: np.ndarray) -> bool:
-        """
-        Validates that there is exactly one KING and one THRONE on the board.
-
-        Args:
-            pieces (np.ndarray): Board configuration to validate.
-        
-        Returns:
-            bool: True if the board is valid.
-        
-        Raises:
-            ValueError: If multiple KINGs, multiple THRONEs, or misplaced THRONE.
-        """
-        king_count = np.count_nonzero(pieces == Piece.KING)
-        throne_count = np.count_nonzero(pieces == Piece.THRONE)
-        
-        if king_count > 1:
-            raise ValueError("Invalid board: more than one KING found.")
-        if king_count == 0:
-            raise ValueError("Invalid board: no KING found.")
-        
-        if throne_count > 1:
-            raise ValueError("Invalid board: more than one THRONE found.")
-        
-        center = pieces[pieces.shape[0] // 2][pieces.shape[1] // 2]
-        
-        if center not in (Piece.THRONE, Piece.KING):
-            raise ValueError("Invalid board: THRONE not in the center.")
-        
-        return True
     
     def __str__(self) -> str:
         """
