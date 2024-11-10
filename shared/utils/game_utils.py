@@ -278,8 +278,10 @@ class Board:
         
         if moving_piece not in (Piece.DEFENDER, Piece.ATTACKER, Piece.KING):
             raise ValueError(f"Cannot move {moving_piece} from {action.from_} to {action.to_}.")
-            
-        self.__pieces[from_indexes] = Piece.EMPTY
+        if from_indexes == (4,4) and moving_piece == Piece.KING:
+            self.__pieces[from_indexes] = Piece.THRONE
+        else:
+            self.__pieces[from_indexes] = Piece.EMPTY
         self.__pieces[to_indexes] = moving_piece
         
     def get_piece(self, position: Tuple[int, int]) -> Piece:
