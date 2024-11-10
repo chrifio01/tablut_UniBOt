@@ -2,8 +2,8 @@
 This module defines an `AbstractPlayer` base class for implementing player agents in Tablut.
 
 Classes:
-    AbstractPlayer: An abstract base class providing a structure for player agents, requiring implementations of move
-    generation and model fitting.
+    AbstractPlayer: An abstract base class providing a structure for player agents, requiring
+    implementations of move generation and model fitting.
 
 Attributes:
     current_state (State): Represents the current game state for the player.
@@ -17,8 +17,8 @@ from .env_utils import State
 
 class AbstractPlayer(ABC):
     """
-    Abstract base class for players in Tablut, defining required properties and methods for interacting with
-    the game environment.
+    Abstract base class for players in Tablut, defining required properties and methods for
+    interacting with the game environment.
 
     Attributes:
         current_state (State): Stores the current game state visible to the player.
@@ -27,9 +27,15 @@ class AbstractPlayer(ABC):
     
     Methods:
         send_move(): Sends the player's chosen move to the game.
-        fit(state, *args, **kwargs) -> Action: Returns the best action determined by the player based on the current state.
+        fit(state, *args, **kwargs) -> Action: Returns the best action determined by the player 
+            based on the current state.
     """
-    
+
+    def __init__(self):
+        self.__current_state = None
+        self.__name = ""
+        self.__color = None
+
     @property
     def current_state(self) -> State:
         """
@@ -39,7 +45,7 @@ class AbstractPlayer(ABC):
             State: The current state of the game as observed by the player.
         """
         return self.__current_state
-    
+
     @current_state.setter
     def current_state(self, new_state: State) -> None:
         """
@@ -49,7 +55,7 @@ class AbstractPlayer(ABC):
             new_state (State): The new state of the game for the player.
         """
         self.__current_state = new_state
-    
+
     @property
     def name(self) -> str:
         """
@@ -59,7 +65,7 @@ class AbstractPlayer(ABC):
             str: The name or identifier of the player.
         """
         return self.__name
-    
+
     @property
     def color(self) -> Color:
         """
@@ -69,27 +75,25 @@ class AbstractPlayer(ABC):
             Color: The color of the player, either WHITE or BLACK.
         """
         return self.__color
-    
+
     @abstractmethod
     def send_move(self) -> None:
         """
         Abstract method for sending the player's selected move to the game.
-        
+
         Implementations should define how the player submits a chosen move to the game.
         """
-        pass
-    
+
     @abstractmethod
     def fit(self, state: State, *args, **kwargs) -> Action:
         """
         Abstract method to calculate the optimal move based on the current state.
-        
+
         Args:
             state (State): The current game state.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
-        
+
         Returns:
             Action: The action chosen by the player based on the game state.
         """
-        pass
