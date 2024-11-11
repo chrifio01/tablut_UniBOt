@@ -154,7 +154,7 @@ def strf_square(position: Tuple[int, int]) -> str:
     
     return f"{column}{row}"
 
-def __check_single_king_and_throne(pieces: np.ndarray) -> bool:
+def _check_single_king_and_throne(pieces: np.ndarray) -> bool:
     """
     Validates that there is exactly one KING and one THRONE on the board.
 
@@ -179,9 +179,11 @@ def __check_single_king_and_throne(pieces: np.ndarray) -> bool:
         raise ValueError("Invalid board: more than one THRONE found.")
     
     center = pieces[pieces.shape[0] // 2][pieces.shape[1] // 2]
-    
-    if center not in (Piece.THRONE, Piece.KING):
-        raise ValueError("Invalid board: THRONE not in the center.")
+
+    if center not in (Piece.THRONE, Piece.KING) and throne_count == 0:
+        raise ValueError("Invalid board: center has no THRONE or KING.")
+    if center not in (Piece.THRONE,) and throne_count == 1:
+        raise ValueError("Invalid board: the THRONE is not in the center")
     
     return True
 
@@ -218,7 +220,7 @@ class Board:
         Raises:
             ValueError: If there are multiple KINGs or THRONEs on the board.
         """
-        __check_single_king_and_throne(initial_board_state)
+        _check_single_king_and_throne(initial_board_state)
         
         if not hasattr(self, '_initialized'):
             shape = initial_board_state.shape
@@ -257,7 +259,7 @@ class Board:
         if shape[0] > self.__height or shape[1] > self.__width:
             raise ValueError("Invalid new board state size")
         
-        __check_single_king_and_throne(new_board_state)
+        _check_single_king_and_throne(new_board_state)
         
         self.__pieces = new_board_state
         
@@ -278,7 +280,7 @@ class Board:
         
         if moving_piece not in (Piece.DEFENDER, Piece.ATTACKER, Piece.KING):
             raise ValueError(f"Cannot move {moving_piece} from {action.from_} to {action.to_}.")
-        if from_indexes == (Board.height // 2, Board.width // 2) and moving_piece == Piece.KING:
+        elif from_indexes == (self.__height // 2, self.__width // 2) and moving_piece == Piece.KING:
             self.__pieces[from_indexes] = Piece.THRONE
         else:
             self.__pieces[from_indexes] = Piece.EMPTY
