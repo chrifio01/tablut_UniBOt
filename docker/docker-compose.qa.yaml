@@ -29,6 +29,7 @@ services:
       - tablut_network
 
   our_player:
+    user: root
     build:
       context: ..
       dockerfile: docker/Dockerfile.client
