@@ -259,7 +259,11 @@ class Board:
         if shape[0] > self.__height or shape[1] > self.__width:
             raise ValueError("Invalid new board state size")
         
+<<<<<<< HEAD
         #__check_single_king_and_throne(new_board_state)
+=======
+        _check_single_king_and_throne(new_board_state)
+>>>>>>> 359c77d (Solved test problems and modified exception messages)
         
         self.__pieces = new_board_state
         
