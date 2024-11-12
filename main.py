@@ -3,6 +3,9 @@
 """
 
 import os
+from shared.utils.game_utils import *
+from shared.huristic import *
+from shared.utils import strp_state
 
 PLAYER_COLOR = os.environ['PLAYER_COLOR']
 TIMEOUT = os.environ['TIMEOUT']
