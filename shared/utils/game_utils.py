@@ -281,9 +281,9 @@ class Board:
         if moving_piece not in (Piece.DEFENDER, Piece.ATTACKER, Piece.KING):
             raise ValueError(f"Cannot move {moving_piece} from {action.from_} to {action.to_}.")
         if action.turn == Color.WHITE and moving_piece not in (Piece.DEFENDER, Piece.KING):
-            raise ValueError(f"Cannot move opponent's pieces.")
+            raise ValueError("Cannot move opponent's pieces.")
         if action.turn == Color.BLACK and moving_piece != Piece.ATTACKER:
-            raise ValueError(f"Cannot move opponent's pieces.")
+            raise ValueError("Cannot move opponent's pieces.")
         if from_indexes == (self.__height // 2, self.__width // 2) and moving_piece == Piece.KING:
             self.__pieces[from_indexes] = Piece.THRONE
         else:
