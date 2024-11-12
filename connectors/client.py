@@ -1,58 +1,73 @@
 import socket
 import json
-import os
+
+from shared.random_player import RandomPlayer
 
 
 class Client:
-    def __init__(self, player, name, timeout=60):
+    def __init__(self, player: RandomPlayer, server_ip, port, current_state=None, timeout=60):
         self.player = player
-        self.name = name  # W or B
         self.timeout = timeout
-        self.server_ip = os.getenv("SERVER_IP", "localhost")
-        self.port = 5800 if player.lower() == 'w' else 5801  #
-        self.current_state = None
+        self.server_ip = server_ip
+        self.port = port
+        self.current_state = current_state
+        self.player_socket = self.connect(player, server_ip, port)
 
-        if self.player.lower() not in ('w', 'b'):
-            raise ValueError("Player role must be B (BLACK) or W (WHITE)")
+    def connect(self, player, server_ip, port) -> socket.socket:
+        try:
+            player_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            player_socket.settimeout(60)
 
-        self.player_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.player_socket.settimeout(self.timeout)
-        print(f"Connecting to {self.server_ip}:{self.port} as {self.player}")
-        self.player_socket.connect((self.server_ip, self.port))
-        print("Connection established!")
-        self.in_stream = self.player_socket.makefile('rb')
-        self.out_stream = self.player_socket.makefile('wb')
+            print(f"Connecting to {server_ip}:{port} as {player}...")
+            player_socket.connect((server_ip, port))
+            print("Connection established!")
 
-    # Send the move to the server
+            return player_socket
+
+        except socket.timeout:
+            print(f"Connection to {server_ip}:{port} timed out.")
+        except socket.gaierror:
+            print(f"Address-related error connecting to {server_ip}:{port}.")
+        except ConnectionRefusedError:
+            print(f"Connection refused by the server at {server_ip}:{port}.")
+        except socket.error as e:
+            print(f"Failed to connect to {server_ip}:{port} due to: {e}")
+
+    def send_name(self):
+        try:
+            name_bytes = (self.player.name + '\n').encode('utf-8')
+
+            self.player_socket.sendall(name_bytes)
+
+            print(f"Sent name '{self.player.name}' to server.")
+        except socket.error as e:
+            print(f"Failed to send name: {e}")
+
     def send_move(self, action):
         try:
             action_json = json.dumps(action)
-            self.out_stream.write(action_json.encode('utf-8') + b'\n')
-            self.out_stream.flush()
+            action_bytes = action_json.encode('utf-8') + b'\n'
+
+            self.player_socket.sendall(action_bytes)
+
             print(f"Sent move '{action_json}' to server.")
         except (socket.error, json.JSONDecodeError) as e:
             print(f"Failed to send move: {e}")
 
     def compute_move(self):
-        next_move = "move"  # Provisory mocked action
-
-    def declare_name(self):
-        try:
-            self.out_stream.write((self.name + '\n').encode('utf-8'))
-            self.out_stream.flush()
-            print(f"Sent name '{self.name}' to server.")
-        except (socket.error, json.JSONDecodeError) as e:
-            print(f"Failed to send name: {e}")
+        return {"move": "some_move"}  # Provisory mocked action
 
     def read_state(self):
-        state_json = self.in_stream.readline().decode('utf-8').strip()
-        if not state_json:
-            print("Received empty response from server.")
-            return None
-
         try:
+            state_data = self.player_socket.recv(1024)
+            if not state_data:
+                print("Received empty response from server.")
+                return None
+
+            state_json = state_data.decode('utf-8')
             self.current_state = json.loads(state_json)
             print(f"Received state '{self.current_state}' from server.")
-        except json.JSONDecodeError:
-            print(f"Failed to decode JSON: {state_json}")
+        except (socket.error, json.JSONDecodeError) as e:
+            print(f"Failed to read state: {e}")
             return None
+
