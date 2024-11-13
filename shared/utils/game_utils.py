@@ -220,22 +220,7 @@ class Board:
         Raises:
             ValueError: If there are multiple KINGs or THRONEs on the board.
         """
-<<<<<<< HEAD
-        #__check_single_king_and_throne(initial_board_state)
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-        #__check_single_king_and_throne(initial_board_state)
-=======
         _check_single_king_and_throne(initial_board_state)
->>>>>>> 359c77d (Solved test problems and modified exception messages)
-=======
-        _check_single_king_and_throne(initial_board_state)
-=======
-        _check_single_king_and_throne(initial_board_state)
->>>>>>> 3864794 (Heuristic implementation)
->>>>>>> 248584b (Heuristic implementation)
->>>>>>> f451f24 (Heuristic implementation)
         
         if not hasattr(self, '_initialized'):
             shape = initial_board_state.shape
@@ -275,9 +260,6 @@ class Board:
             raise ValueError("Invalid new board state size")
         
 <<<<<<< HEAD
-        #__check_single_king_and_throne(new_board_state)
-=======
-<<<<<<< HEAD
 <<<<<<< HEAD
         #__check_single_king_and_throne(new_board_state)
 =======
@@ -289,7 +271,6 @@ class Board:
         _check_single_king_and_throne(new_board_state)
 >>>>>>> 3864794 (Heuristic implementation)
 >>>>>>> 248584b (Heuristic implementation)
->>>>>>> f451f24 (Heuristic implementation)
         
         self.__pieces = new_board_state
         
