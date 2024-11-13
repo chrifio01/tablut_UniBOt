@@ -220,18 +220,7 @@ class Board:
         Raises:
             ValueError: If there are multiple KINGs or THRONEs on the board.
         """
-<<<<<<< HEAD
-<<<<<<< HEAD
-        #__check_single_king_and_throne(initial_board_state)
-=======
         _check_single_king_and_throne(initial_board_state)
->>>>>>> 359c77d (Solved test problems and modified exception messages)
-=======
-        _check_single_king_and_throne(initial_board_state)
-=======
-        _check_single_king_and_throne(initial_board_state)
->>>>>>> 3864794 (Heuristic implementation)
->>>>>>> 248584b (Heuristic implementation)
         
         if not hasattr(self, '_initialized'):
             shape = initial_board_state.shape
@@ -270,18 +259,7 @@ class Board:
         if shape[0] > self.__height or shape[1] > self.__width:
             raise ValueError("Invalid new board state size")
         
-<<<<<<< HEAD
-<<<<<<< HEAD
-        #__check_single_king_and_throne(new_board_state)
-=======
         _check_single_king_and_throne(new_board_state)
->>>>>>> 359c77d (Solved test problems and modified exception messages)
-=======
-        _check_single_king_and_throne(new_board_state)
-=======
-        _check_single_king_and_throne(new_board_state)
->>>>>>> 3864794 (Heuristic implementation)
->>>>>>> 248584b (Heuristic implementation)
         
         self.__pieces = new_board_state
         
@@ -302,11 +280,7 @@ class Board:
         
         if moving_piece not in (Piece.DEFENDER, Piece.ATTACKER, Piece.KING):
             raise ValueError(f"Cannot move {moving_piece} from {action.from_} to {action.to_}.")
-        if action.turn == Color.WHITE and moving_piece not in (Piece.DEFENDER, Piece.KING):
-            raise ValueError("Cannot move opponent's pieces.")
-        if action.turn == Color.BLACK and moving_piece != Piece.ATTACKER:
-            raise ValueError("Cannot move opponent's pieces.")
-        if from_indexes == (self.__height // 2, self.__width // 2) and moving_piece == Piece.KING:
+        elif from_indexes == (self.__height // 2, self.__width // 2) and moving_piece == Piece.KING:
             self.__pieces[from_indexes] = Piece.THRONE
         else:
             self.__pieces[from_indexes] = Piece.EMPTY
