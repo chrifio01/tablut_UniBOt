@@ -34,12 +34,10 @@ Each character represents a piece or an empty space:
 """
 
 CAMPS = {
-    (0, 3), (0, 4), (0, 5),
-    (1, 4),
-    (3, 0), (4, 0), (5, 0),
-    (8, 3), (8, 4), (8, 5),
-    (4, 1), (4, 8), (3, 8), (5, 8),
-    (8, 4)
+    (0, 3), (0, 4), (0, 5), (1, 4),  # down
+    (4, 1), (3, 0), (4, 0), (5, 0), # left
+    (8, 3), (8, 4), (8, 5), (7, 4), # up
+    (3, 8), (4, 8), (5, 8), (4, 7),  # right
 }
 """
 set of tuple: Positions designated as 'camps' on the board.
