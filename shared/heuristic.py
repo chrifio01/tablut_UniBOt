@@ -6,15 +6,11 @@ from .consts import *
 import copy
 
 
-def white_heuristic(state: State, move: Action):
+def _white_heuristic(board: Board):
     """
     Returns the float value of the current state of the board for white
     """
     
-        
-    board = Board(state.board.pieces)
-    
-    board.update_pieces(move)
     
 
     king_pos = board.king_pos() 
@@ -57,7 +53,7 @@ def white_heuristic(state: State, move: Action):
     return fitness
     
 
-def black_heuristic(state: State, move: Action):
+def _black_heuristic(board: Board):
     """
     Black heuristics should be based on:
     - Number of black pawns
@@ -67,10 +63,7 @@ def black_heuristic(state: State, move: Action):
     - A coefficient of encirclement of the king
     """
         
-    board = Board(state.board.pieces)
-
-    board.update_pieces(move)
-
+   
 
     fitness = 0
 
@@ -117,10 +110,15 @@ def heuristic(state: State, move: Action):
     """
     if MoveChecker.is_valid_move(state, move):
 
+        board = Board(state.board.pieces)
+
+        board.update_pieces(move)
+
+
         if move.turn == Color.WHITE:
-            return white_heuristic(state, move) - black_heuristic(state, move)
+            return _white_heuristic(board) - _black_heuristic(board)
         if move.turn == Color.BLACK:
-            return black_heuristic(state, move) - white_heuristic(state, move)
+            return _black_heuristic(board) - _white_heuristic(board)
     else:
         return -9999
 

@@ -200,12 +200,8 @@ class Board:
         update_pieces(action: Action): Updates board state based on an action.
         get_piece(position: Tuple[int, int]) -> Piece: Returns the piece at a specific position.
     """
-    _instance = None  # Class-level attribute to store the singleton instance
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(Board, cls).__new__(cls)
-        return cls._instance
+    
     
     def __init__(
             self, 
@@ -222,12 +218,12 @@ class Board:
         """
         _check_single_king_and_throne(initial_board_state)
         
-        if not hasattr(self, '_initialized'):
-            shape = initial_board_state.shape
-            self.__height = shape[0]    # first index is the row
-            self.__width = shape[1]     # second index is the column
-            self.__pieces = initial_board_state
-            self._initialized = True
+        
+        shape = initial_board_state.shape
+        self.__height = shape[0]    # first index is the row
+        self.__width = shape[1]     # second index is the column
+        self.__pieces = initial_board_state
+        self._initialized = True
     
     @property
     def height(self) -> int:
