@@ -20,7 +20,10 @@ import socket
 import struct
 import json
 
+from shared.loggers import logger
+
 from shared.utils import AbstractPlayer, strp_state, state_decoder, Turn
+
 
 class Client:
     """
@@ -68,7 +71,7 @@ class Client:
         if self.socket:
             self.socket.close()
 
-    def _connect(self) -> socket.socket:
+    def _connect(self):
         """
         Establishes a connection to the server.
 
@@ -76,19 +79,19 @@ class Client:
             socket.socket: The socket connection object.
         """
         try:
-            print(f"Connecting to {self.server_ip}:{self.port} as {self.player.name}...")
+            logger.debug(f"Connecting to {self.server_ip}:{self.port} as {self.player.name}...")
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(self.timeout)
             self.socket.connect((self.server_ip, self.port))
-            print("Connection established!")
+            logger.debug("Connection established!")
         except socket.timeout:
-            print(f"Connection to {self.server_ip}:{self.port} timed out.")
+            logger.debug(f"Connection to {self.server_ip}:{self.port} timed out.")
         except socket.gaierror:
-            print(f"Address-related error connecting to {self.server_ip}:{self.port}.")
+            logger.debug(f"Address-related error connecting to {self.server_ip}:{self.port}.")
         except ConnectionRefusedError:
-            print(f"Connection refused by the server at {self.server_ip}:{self.port}.")
+            logger.debug(f"Connection refused by the server at {self.server_ip}:{self.port}.")
         except socket.error as e:
-            print(f"Failed to connect to {self.server_ip}:{self.port} due to: {e}")
+            logger.debug(f"Failed to connect to {self.server_ip}:{self.port} due to: {e}")
 
     def _send_name(self):
         """
@@ -97,9 +100,9 @@ class Client:
         try:
             self.socket.send(struct.pack('>i', len(self.player.name)))
             self.socket.send(self.player.name.encode())
-            print(f"Declared name '{self.player.name}' to server.")
+            logger.debug(f"Declared name '{self.player.name}' to server.")
         except socket.error as e:
-            print(f"Failed to send name to the server: {e}")
+            logger.debug(f"Failed to send name to the server: {e}")
 
     def _send_move(self, action):
         """
@@ -113,7 +116,7 @@ class Client:
             self.socket.send(struct.pack('>i', len(action_str)))
             self.socket.send(action_str.encode())
         except socket.error as e:
-            print(f"Failed to send move to the server: {e}")
+            logger.debug(f"Failed to send move to the server: {e}")
 
     def _compute_move(self) -> dict:
         """
@@ -136,7 +139,7 @@ class Client:
             current_state_server_bytes = self.socket.recv(len_bytes)
             self.current_state = json.loads(current_state_server_bytes, object_hook=state_decoder)
         except (socket.error, json.JSONDecodeError) as e:
-            print(f"Failed to read or decode the server response: {e}")
+            logger.debug(f"Failed to read or decode the server response: {e}")
             raise RuntimeError('Failed to decode server response')
 
     def _recvall(self, n: int) -> bytes:
@@ -162,21 +165,21 @@ class Client:
         Main loop for the client to handle game state updates and send moves.
         """
         self._send_name()
-        
+
         while True:
-            print("Reading state...")
+            logger.debug("Reading state...")
             self._read_state()
-            print(self.current_state)
-            
+            logger.debug(self.current_state)
+
             if self.current_state.turn in (Turn.DRAW, Turn.BLACK_WIN, Turn.WHITE_WIN):
-                print(f"Game ended...\nResult: {self.current_state.turn.value}")
+                logger.debug(f"Game ended...\nResult: {self.current_state.turn.value}")
                 return
-            
+
             if self.current_state.turn.value == self.player.color.value:
-                print("Calculating move...")
+                logger.debug("Calculating move...")
                 action = self._compute_move()
-                print(f"Sending move:\n{action}")
+                logger.debug(f"Sending move:\n{action}")
                 self._send_move(action)
-                print("Action sent")
+                logger.debug("Action sent")
             else:
-                print("Waiting for opponent's move...")
+                logger.debug("Waiting for opponent's move...")
