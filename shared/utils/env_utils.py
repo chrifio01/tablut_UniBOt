@@ -19,7 +19,8 @@ Usage Example:
 
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict
-from .game_utils import Color, Board, strp_board
+from .game_utils import Color, Board, strp_board, Piece
+from shared.consts import WEIGHTS
 
 __all__ = ['State', 'strp_state']
 
@@ -72,3 +73,67 @@ def strp_state(
         raise ValueError("Invalid state format: missing board or turn information.") from e
     except ValueError as e:
         raise ValueError("Invalid state format: could not parse board or turn.") from e
+
+
+
+
+
+
+############################################### Definition of the functions for the evaluation of the Fitness in the heuristic ###########################################################################
+
+
+
+def king_distance_from_center(board: Board, king: tuple [int, int]):
+    return ((king[0] - (board.width//2 + 1))**2 + (king[1] - (board.height//2 + 1))**2)**0.5
+
+
+def king_surrounded(board):
+    king = board.king_pos()
+    c = 0
+    blocked_pos = []
+    try:
+        if board.get_piece()[king[0]+1][king[1]] == Piece.ATTACKER:
+            c += 1
+            blocked_pos.append((king[0]+1, king[1]))
+    except:
+        pass
+    try:
+        if board.get_piece()[king[0]-1][king[1]] == Piece.ATTACKER:
+            c += 1
+            blocked_pos.append((king[0]-1, king[1]))
+    except:
+        pass
+    try:
+        if board.get_piece()[king[0]][king[1]+1] == Piece.ATTACKER:
+            c += 1
+            blocked_pos.append((king[0], king[1]+1))
+    except:
+        pass
+    try:
+        if board.get_piece()[king[0]][king[1]-1] == Piece.ATTACKER:
+            c += 1
+            blocked_pos.append((king[0], king[1]-1))
+    except:
+        pass
+    return c, blocked_pos
+
+
+
+
+def position_weight(king):
+    return WEIGHTS[king[0]][king[1]]
+
+
+def pawns_around(board, pawn, distance: int):
+    """
+    Returns the number of pawns around a given pawn within a certain distance (usually the king)
+    """
+    x, y = pawn
+    count = 0
+    for i in range(-distance, distance+1):
+        for j in range(-distance, distance+1):
+            if i == 0 and j == 0:
+                continue
+            if (x+i, y+j) in board.get_black_coordinates():
+                count += 1
+    return count

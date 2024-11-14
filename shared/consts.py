@@ -46,3 +46,21 @@ set of tuple: Positions designated as 'camps' on the board.
     These positions have specific movement restrictions
 and are represented as (row, column) pairs on a 9x9 grid.
 """
+
+"""
+Weights for the heuristic function
+"""
+
+WEIGHTS = [[0, 20, 20, -6, -6, -6, 20, 20, 0],
+           [20, 1, 1, -5, -6, -5, 1,  1, 20],
+           [20, 1, 4,  1, -2,  1, 4,  1, 20],
+           [-6, -5, 1,  1,  1,  1, 1, -5, -6],
+           [-6, -6, -2,  1,  2,  1, -2, -6, -6],
+           [-6, -5, 1,  1,  1,  1, 1, -5, -6],
+           [20, 1, 4,  1, -2,  1, 4,  1, 20],
+           [20, 1, 1, -5, -6, -5, 1,  1, 20],
+           [0, 20, 20, -6, -6, -6, 20, 20, 0]]
+
+ALPHA_W, BETA_W, GAMMA_W, THETA_W, EPSILON_W, OMEGA_W = [0.21639120828483156, 0.723587137336777, 9, 1.06923818569000507, 2.115749207248323, 10]
+
+ALPHA_B, BETA_B, GAMMA_B, THETA_B, EPSILON_B = [0.958245251997756, 0.25688393654958275, 0.812052344592159, 0.9193347856045799, 1.7870310915100207]

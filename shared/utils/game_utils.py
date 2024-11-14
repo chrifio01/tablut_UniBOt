@@ -310,9 +310,14 @@ class Board:
     def king_pos(self):
         """
         Return the king position on the board as a tuple of two elements.
+        Raises a ValueError if no king is found.
         """
         king_position = np.where(self.__pieces == Piece.KING)
-        return (king_position[0][0], king_position[1][0]) if king_position[0].size > 0 else None
+    
+        if king_position[0].size == 0:
+            raise ValueError("King not found on the board")
+    
+        return (king_position[0][0], king_position[1][0])
 
     
     def num_white(self):
@@ -327,7 +332,7 @@ class Board:
         """
         return np.count_nonzero(self.__pieces == Piece.ATTACKER)
     
-    def _is_there_a_clear_view(self, piece1, piece2):
+    def is_there_a_clear_view(self, piece1, piece2):
         """"
         Checks if there is a clear line of sight between two pieces on a grid (same row or column).
         It returns True if the pieces are aligned horizontally or vertically and there are no other 
