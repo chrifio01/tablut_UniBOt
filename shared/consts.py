@@ -60,14 +60,20 @@ LOGGING_CONFIG = {
             'level': 'DEBUG',
             'formatter': 'default',
             'stream': 'ext://sys.stdout',
-        }
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'level': 'DEBUG',
+            'formatter': 'default',
+            'filename': 'app.log',
+        },
     },
     'root': {
         'level': 'DEBUG',
         'handlers': ['console'],
     },
     'loggers': {
-        'my_debug_logger': {
+        'tablut_logger': {
             'level': 'DEBUG',
             'handlers': ['console', 'file'],
             'propagate': False,
