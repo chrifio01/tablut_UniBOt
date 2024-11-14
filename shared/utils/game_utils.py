@@ -336,7 +336,7 @@ class Board:
         """
         return np.count_nonzero(self.__pieces == Piece.ATTACKER)
     
-    def is_there_a_clear_view(self, piece1, piece2):
+    def is_there_a_clear_view(self, piece1: tuple, piece2: tuple):
         """"
         Checks if there is a clear line of sight between two pieces on a grid (same row or column).
         It returns True if the pieces are aligned horizontally or vertically and there are no other 

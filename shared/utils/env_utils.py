@@ -84,10 +84,25 @@ def strp_state(
 
 
 def king_distance_from_center(board: Board, king: tuple [int, int]):
+    """
+    Calculate de distance of the king from the center
+
+    Args:
+    a Board object 
+    The king coordinates as a tuple
+    """
+
     return ((king[0] - (board.width//2 + 1))**2 + (king[1] - (board.height//2 + 1))**2)**0.5
 
 
-def king_surrounded(board):
+def king_surrounded(board: Board):
+    """
+    Return the number of sides in which the king is surrounded by an enemy (max(c) = 4)
+    Return also a list with the blocked position around the king
+
+    Args:
+    Board object
+    """
     king = board.king_pos()
     c = 0
     blocked_pos = []
@@ -120,13 +135,22 @@ def king_surrounded(board):
 
 
 
-def position_weight(king):
+def position_weight(king: tuple [int, int]):
+    """
+    Return a value depending on the position of the king on the board
+
+    Args:
+    Tuple with the king's coordinates
+    """
     return WEIGHTS[king[0]][king[1]]
 
 
-def pawns_around(board, pawn, distance: int):
+def pawns_around(board: Board, pawn: tuple, distance: int):
     """
     Returns the number of pawns around a given pawn within a certain distance (usually the king)
+
+    Args:
+    Board object, the coordinate of the target pawn as a tuple, the distance of the search from the target
     """
     x, y = pawn
     count = 0
