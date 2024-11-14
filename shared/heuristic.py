@@ -12,7 +12,7 @@ def white_heuristic(state: State, move: Action):
     """
     
         
-    board = Board(state.board)
+    board = Board(state.board.pieces)
     
     board.update_pieces(move)
     
@@ -67,7 +67,7 @@ def black_heuristic(state: State, move: Action):
     - A coefficient of encirclement of the king
     """
         
-    board = Board(state.board)
+    board = Board(state.board.pieces)
 
     board.update_pieces(move)
 
