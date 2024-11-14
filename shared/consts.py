@@ -46,3 +46,33 @@ set of tuple: Positions designated as 'camps' on the board.
     These positions have specific movement restrictions
 and are represented as (row, column) pairs on a 9x9 grid.
 """
+
+# Define the configuration dictionary
+LOGGING_CONFIG = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'default',
+            'stream': 'ext://sys.stdout',
+        }
+    },
+    'root': {
+        'level': 'DEBUG',
+        'handlers': ['console'],
+    },
+    'loggers': {
+        'my_debug_logger': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file'],
+            'propagate': False,
+        },
+    },
+}
