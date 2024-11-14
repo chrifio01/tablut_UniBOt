@@ -19,9 +19,10 @@ Usage Example:
 
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict
-from .game_utils import Color, Board, strp_board
+from .game_utils import Color, Board, strp_board, strp_turn, parse_state_board, Turn
+import numpy as np
 
-__all__ = ['State', 'strp_state']
+__all__ = ['State', 'strp_state', 'state_decoder']
 
 
 class State(BaseModel):
@@ -35,9 +36,26 @@ class State(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     
     board: Annotated[Board, "The current state of the game board"]
-    turn: Annotated[Color, "The turn player color"]
+    turn: Annotated[Turn, "The turn player"]
+    
+    def __str__(self):
+        return f"{self.board.__str__()}\n-\n{self.turn.value}"
 
+def state_decoder(obj: dict):
+    """
+    Decodes JSON objects into `State` objects.
 
+    Args:
+        obj (dict): The JSON object to be decoded.
+
+    Returns:
+        State: A `State` object created from the provided JSON object.
+    """
+    if 'turn' in obj and 'board' in obj:
+        turn = strp_turn(obj['turn'])
+        board = parse_state_board(obj['board'])
+        return State(board=board, turn=turn)
+    
 def strp_state(
     state_str: str
 ) -> Annotated[State, "The corresponding state from a string representation of the state"]:
@@ -67,8 +85,9 @@ def strp_state(
         board = Board(pieces)
         board.pieces = pieces  # Set board configuration for non-initial states
 
-        return State(board=board, turn=Color(turn_str))
+        return State(board=board, turn=Turn(turn_str))
     except IndexError as e:
         raise ValueError("Invalid state format: missing board or turn information.") from e
     except ValueError as e:
         raise ValueError("Invalid state format: could not parse board or turn.") from e
+    
