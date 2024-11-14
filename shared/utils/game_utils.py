@@ -27,13 +27,13 @@ Usage Example:
 """
 
 from enum import Enum
-from typing import Annotated, Tuple
+from typing import Annotated, Tuple, List
 import json
 import string
 from pydantic import BaseModel
 import numpy as np
 
-__all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square']
+__all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square', 'strp_turn', 'Turn', 'strp_color']
 
 class Color(Enum):
     """
@@ -45,7 +45,58 @@ class Color(Enum):
     """
     WHITE = 'W'
     BLACK = 'B'
+    
+def strp_color(color_str: str) -> Color:
+    """
+    Parses a turn string (e.g., "W", "B", "WB", "BW" or "D") and returns the corresponding `Turn` enum value.
 
+    Args:
+        turn_str (str): The turn string to parse.
+
+    Returns:
+        Turn: The corresponding `Turn` enum value.
+    """
+    low = color_str.lower()
+    
+    if low == 'white':
+        return Color.WHITE
+    elif low == 'black':
+        return Color.BLACK
+    else:
+        raise ValueError(f"Invalid color string: {color_str}")
+    
+class Turn(Enum):
+    BLACK_TURN = 'B'
+    WHITE_TURN = 'W'
+    BLACK_WIN = 'BW'
+    WHITE_WIN = 'WB'
+    DRAW = 'D'
+    
+def strp_turn(turn_str: str) -> Turn:
+    """
+    Parses a turn string (e.g., "W", "B", "WB", "BW" or "D") and returns the corresponding `Turn` enum value.
+
+    Args:
+        turn_str (str): The turn string to parse.
+
+    Returns:
+        Turn: The corresponding `Turn` enum value.
+    """
+    low = turn_str.lower()
+    
+    if low == 'white':
+        return Turn.WHITE_TURN
+    elif low == 'black':
+        return Turn.BLACK_TURN
+    elif low == 'whitewin':
+        return Turn.WHITE_WIN
+    elif low == 'blackwin':
+        return Turn.BLACK_WIN
+    elif low == 'draw':
+        return Turn.DRAW
+    else:
+        raise ValueError(f"Invalid turn string: {turn_str}")
+    
 class Action(BaseModel):
     """
     Model representing a player's move, consisting of the start and destination squares and the player's color.
@@ -60,7 +111,7 @@ class Action(BaseModel):
     """
     from_: str
     to_: str
-    turn: Color
+    turn: Turn
     
     def __str__(self) -> str:
         """
@@ -94,6 +145,21 @@ class Piece(Enum):
     KING = 'K'
     THRONE = 'T'
     EMPTY = 'O'
+    
+def _strp_piece(piece_str: str) -> Piece:
+    lower_str = piece_str.lower()
+    if lower_str == 'empty':
+        return Piece.EMPTY
+    if lower_str == 'white':
+        return Piece.DEFENDER
+    if lower_str == 'black':
+        return Piece.ATTACKER
+    if lower_str == 'king':
+        return Piece.KING
+    if lower_str == 'throne':
+        return Piece.THRONE
+    raise ValueError(f"Invalid piece string: {piece_str}")
+
 
 def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:
     """
@@ -108,6 +174,8 @@ def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board
     rows = board_str.strip().split('\n')
     board_array = np.array([[Piece(char) for char in row] for row in rows[::-1]], dtype=Piece)
     return board_array
+
+
 
 def strp_square(square_str: str) -> Tuple[int, int]:
     """
@@ -199,14 +267,7 @@ class Board:
     Methods:
         update_pieces(action: Action): Updates board state based on an action.
         get_piece(position: Tuple[int, int]) -> Piece: Returns the piece at a specific position.
-    """
-    _instance = None  # Class-level attribute to store the singleton instance
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(Board, cls).__new__(cls)
-        return cls._instance
-    
+    """    
     def __init__(
             self, 
             initial_board_state: Annotated[np.ndarray, "The initial pieces configuration as a 2D np array referenced as (col, row) pairs"]
@@ -222,12 +283,11 @@ class Board:
         """
         _check_single_king_and_throne(initial_board_state)
         
-        if not hasattr(self, '_initialized'):
-            shape = initial_board_state.shape
-            self.__height = shape[0]    # first index is the row
-            self.__width = shape[1]     # second index is the column
-            self.__pieces = initial_board_state
-            self._initialized = True
+        shape = initial_board_state.shape
+        self.__height = shape[0]    # first index is the row
+        self.__width = shape[1]     # second index is the column
+        self.__pieces = initial_board_state
+        self._initialized = True
     
     @property
     def height(self) -> int:
@@ -310,3 +370,7 @@ class Board:
             str: A string representation of the board.
         """
         return '\n'.join(''.join(piece.value for piece in row) for row in self.__pieces[::-1])
+
+def parse_state_board(state_board: List[List[str]]) -> Board:
+    pieces = np.array([[_strp_piece(piece_str) for piece_str in row] for row in state_board])
+    return Board(pieces)
