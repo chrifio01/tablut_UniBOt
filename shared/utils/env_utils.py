@@ -21,6 +21,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict
 from shared.consts import WEIGHTS
 from .game_utils import Color, Board, strp_board, Piece
+import numpy as np
 
 
 __all__ = ['State', 'strp_state']
@@ -153,3 +154,69 @@ def pawns_around(board: Board, pawn: tuple, distance: int):
             if (x+i, y+j) in board.get_black_coordinates():
                 count += 1
     return count
+
+def piece_parser(piece: Piece) -> int:
+    """
+    Return the index of the boolean array (which represents the board) used as a input for the policy network of the DQN
+
+    Arg:
+    Piece object
+
+    Example:
+    If the piece given is the KING, the function will return 1
+    The second array given as input will be the one displaying the position of the KING in the 9x9 board (index 1 means second element)
+    """
+    state_pieces = {Piece.DEFENDER : 0,
+                    Piece.KING : 1,
+                    Piece.ATTACKER : 2,
+                    Piece.EMPTY : 3,
+                    Piece.CAMPS : 4,
+                    Piece.THRONE : 4}
+    return state_pieces[piece]
+
+class FeaturizeState:
+    def __init__(self, state_string: str):
+        """
+        Initialize the State Featurizer class with the string representing the board
+        This string is used to generate the tensor input for the DQN
+        
+        Arg:
+        state_string, the string representing the board
+        """
+        self.state_string = state_string
+
+    def generate_input(self):
+        """
+        Return the tensor representing the state which the DQN should receive as input to choose best action
+
+        """
+        position_layer = [np.zeros((9, 9), dtype=bool) for _ in range(5)]
+        position_layer[piece_parser(Piece.CAMPS)] = np.array([
+                                                            [0, 0, 0, 1, 1, 1, 0, 0, 0],
+                                                            [0, 0, 0, 0, 1, 0, 0, 0, 0],
+                                                            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                                            [1, 0, 0, 0, 0, 0, 0, 0, 1],
+                                                            [1, 1, 0, 0, 1, 0, 0, 1, 1],  
+                                                            [1, 0, 0, 0, 0, 0, 0, 0, 1],  
+                                                            [0, 0, 0, 0, 0, 0, 0, 0, 0],  
+                                                            [0, 0, 0, 0, 1, 0, 0, 0, 0],  
+                                                            [0, 0, 0, 1, 1, 1, 0, 0, 0]   
+                                                            ], dtype=bool)
+        state = strp_state(self.state_string)
+        board_str = Board(state.board.pieces)
+        
+        for i in range(board_str.height):
+            for j in range(board_str.width):
+                index = i * 9 + j
+                position = (i,j)  
+                piece = piece_parser(Piece(board_str.get_piece(position)))
+                position_layer[piece][i, j] = True
+        
+        turn_layer = np.array([1 if Color(state.turn) == 'W' else 0], dtype=bool)
+
+        w_heur_layer = np.array([board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str,board_str.king_pos()), position_weight(board_str.king_pos())])
+        #king_surrounded(board_str)[0],
+        b_heur_layer = np.array([board_str.num_black(), board_str.num_white(), pawns_around(board_str, board_str.king_pos(), 1)])
+
+        input_tensor = np.array([position_layer, turn_layer, w_heur_layer, b_heur_layer], dtype="object")
+        return input_tensor

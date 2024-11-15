@@ -94,6 +94,7 @@ class Piece(Enum):
     KING = 'K'
     THRONE = 'T'
     EMPTY = 'O'
+    CAMPS = 'C'
 
 def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:
     """
