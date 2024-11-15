@@ -355,8 +355,8 @@ class Board:
                 if self.__pieces[i][piece1[1]] != Piece.EMPTY:
                     return False
             return True
-        else:
-            return False
+        
+        return False
         
     def get_black_coordinates(self):
         """

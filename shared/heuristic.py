@@ -1,15 +1,16 @@
-import math
-from shared.utils.env_utils import king_distance_from_center, king_surrounded, position_weight, pawns_around, State
-from shared.utils.game_utils import Action, Board, Color
-from .move_checker import MoveChecker
-from .consts import ALPHA_W, BETA_W, GAMMA_W, THETA_W, EPSILON_W, OMEGA_W, ALPHA_B, BETA_B, GAMMA_B, THETA_B
-
 """
 This module implements heuristic evaluation functions for a board game involving two sides, white and black. 
 It defines heuristic functions used to evaluate board states for both players (white and black) based on various 
 factors such as the number of pawns, the king's position, and strategic elements like free paths and encirclement.
 The main heuristic function integrates move validation and calculates a heuristic score to assist in decision-making.
 """
+
+from shared.utils.env_utils import king_distance_from_center, king_surrounded, position_weight, pawns_around, State
+from shared.utils.game_utils import Action, Board, Color
+from .move_checker import MoveChecker
+from .consts import ALPHA_W, BETA_W, GAMMA_W, THETA_W, EPSILON_W, OMEGA_W, ALPHA_B, BETA_B, GAMMA_B, THETA_B
+
+
 
 def _white_heuristic(board: Board):
     """
@@ -21,10 +22,6 @@ def _white_heuristic(board: Board):
     king_pos = board.king_pos() 
 
         
-
-    #alpha0, beta0, gamma0, theta0, epsilon0, omega0 = [
-    #    12, 22, 9, 1, 2, 20]
-
     fitness = 0 
 
     # Blackpieces
@@ -88,10 +85,6 @@ def _black_heuristic(board: Board):
     # theta0 times the n° free ways to king
     fitness += THETA_B * sum(free_paths)
 
-    # norm_fitness = (fitness / (alpha0 * len(board.blacks) + gamma0 *
-    #                           pawns_around(board, king_pos, distance=2) + theta0 * sum(free_paths)))
-
-    # print("BLACK FITNESS: ", norm_fitness)
 
     return fitness
 
@@ -120,5 +113,4 @@ def heuristic(state: State, move: Action):
         if move.turn == Color.BLACK:
             return _black_heuristic(board) - _white_heuristic(board)
         return None
-    else:
-        return -9999
+    return -9999
