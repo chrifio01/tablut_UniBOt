@@ -349,7 +349,7 @@ class Board:
                 if self.__pieces[piece1[0]][i] != Piece.EMPTY:
                     return False
             return True
-        elif piece1[1] == piece2[1]:
+        if piece1[1] == piece2[1]:
             offset = 1 if piece1[0] <= piece2[0] else -1
             for i in range(int(piece1[0] + offset), int(piece2[0]), offset):
                 if self.__pieces[i][piece1[1]] != Piece.EMPTY:
@@ -359,6 +359,8 @@ class Board:
             return False
         
     def get_black_coordinates(self):
-        
+        """
+        Function that return a list of all the coordinates for the black pawns on the board at the moment
+        """
         return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if self.__pieces[i, j] == Piece.ATTACKER]
       

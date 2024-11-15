@@ -1,10 +1,15 @@
 import math
-from shared.utils.env_utils import king_distance_from_center, king_surrounded, position_weight, pawns_around, strp_state, State
-from shared.utils.game_utils import Action, Board, Color, strp_board
+from shared.utils.env_utils import king_distance_from_center, king_surrounded, position_weight, pawns_around, State
+from shared.utils.game_utils import Action, Board, Color
 from .move_checker import MoveChecker
-from .consts import *
-import copy
+from .consts import ALPHA_W, BETA_W, GAMMA_W, THETA_W, EPSILON_W, OMEGA_W, ALPHA_B, BETA_B, GAMMA_B, THETA_B
 
+"""
+This module implements heuristic evaluation functions for a board game involving two sides, white and black. 
+It defines heuristic functions used to evaluate board states for both players (white and black) based on various 
+factors such as the number of pawns, the king's position, and strategic elements like free paths and encirclement.
+The main heuristic function integrates move validation and calculates a heuristic score to assist in decision-making.
+"""
 
 def _white_heuristic(board: Board):
     """
@@ -44,11 +49,6 @@ def _white_heuristic(board: Board):
     fitness -= king_vals * THETA_W
 
     fitness += position_weight(king_pos) * EPSILON_W # Return maximum values when king is in escape tiles !!WIN CONFIG!! 
-
-    norm_fitness = (
-        fitness / (16 * BETA_W + math.sqrt(32) * GAMMA_W + 20*EPSILON_W))
-
-        # print("WHITE FITNESS: ", norm_fitness)
 
     return fitness
     
@@ -119,6 +119,6 @@ def heuristic(state: State, move: Action):
             return _white_heuristic(board) - _black_heuristic(board)
         if move.turn == Color.BLACK:
             return _black_heuristic(board) - _white_heuristic(board)
+        return None
     else:
         return -9999
-

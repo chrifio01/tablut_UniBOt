@@ -19,8 +19,9 @@ Usage Example:
 
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict
-from .game_utils import Color, Board, strp_board, Piece
 from shared.consts import WEIGHTS
+from .game_utils import Color, Board, strp_board, Piece
+
 
 __all__ = ['State', 'strp_state']
 
@@ -104,30 +105,23 @@ def king_surrounded(board: Board):
     king = board.king_pos()
     c = 0
     blocked_pos = []
-    try:
-        if board.get_piece()[king[0]+1][king[1]] == Piece.ATTACKER:
-            c += 1
-            blocked_pos.append((king[0]+1, king[1]))
-    except:
-        pass
-    try:
-        if board.get_piece()[king[0]-1][king[1]] == Piece.ATTACKER:
-            c += 1
-            blocked_pos.append((king[0]-1, king[1]))
-    except:
-        pass
-    try:
-        if board.get_piece()[king[0]][king[1]+1] == Piece.ATTACKER:
-            c += 1
-            blocked_pos.append((king[0], king[1]+1))
-    except:
-        pass
-    try:
-        if board.get_piece()[king[0]][king[1]-1] == Piece.ATTACKER:
-            c += 1
-            blocked_pos.append((king[0], king[1]-1))
-    except:
-        pass
+
+    if board.get_piece()[king[0]+1][king[1]] == Piece.ATTACKER:
+        c += 1
+        blocked_pos.append((king[0]+1, king[1]))
+
+    if board.get_piece()[king[0]-1][king[1]] == Piece.ATTACKER:
+        c += 1
+        blocked_pos.append((king[0]-1, king[1]))
+
+    if board.get_piece()[king[0]][king[1]+1] == Piece.ATTACKER:
+        c += 1
+        blocked_pos.append((king[0], king[1]+1))
+
+    if board.get_piece()[king[0]][king[1]-1] == Piece.ATTACKER:
+        c += 1
+        blocked_pos.append((king[0], king[1]-1))
+  
     return c, blocked_pos
 
 
