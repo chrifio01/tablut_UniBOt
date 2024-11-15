@@ -200,12 +200,8 @@ class Board:
         update_pieces(action: Action): Updates board state based on an action.
         get_piece(position: Tuple[int, int]) -> Piece: Returns the piece at a specific position.
     """
-    _instance = None  # Class-level attribute to store the singleton instance
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(Board, cls).__new__(cls)
-        return cls._instance
+    
     
     def __init__(
             self, 
@@ -222,12 +218,12 @@ class Board:
         """
         _check_single_king_and_throne(initial_board_state)
         
-        if not hasattr(self, '_initialized'):
-            shape = initial_board_state.shape
-            self.__height = shape[0]    # first index is the row
-            self.__width = shape[1]     # second index is the column
-            self.__pieces = initial_board_state
-            self._initialized = True
+        
+        shape = initial_board_state.shape
+        self.__height = shape[0]    # first index is the row
+        self.__width = shape[1]     # second index is the column
+        self.__pieces = initial_board_state
+        self._initialized = True
     
     @property
     def height(self) -> int:
@@ -310,3 +306,61 @@ class Board:
             str: A string representation of the board.
         """
         return '\n'.join(''.join(piece.value for piece in row) for row in self.__pieces[::-1])
+
+    def king_pos(self):
+        """
+        Return the king position on the board as a tuple of two elements.
+        Raises a ValueError if no king is found.
+        """
+        king_position = np.where(self.__pieces == Piece.KING)
+    
+        if king_position[0].size == 0:
+            raise ValueError("King not found on the board")
+    
+        return (king_position[0][0], king_position[1][0])
+
+    
+    def num_white(self):
+        """
+        Return the number of white pawns on the board
+        """
+        return np.count_nonzero(self.__pieces == Piece.DEFENDER)
+    
+    def num_black(self):
+        """
+        Return the number of black pawns on the board
+        """
+        return np.count_nonzero(self.__pieces == Piece.ATTACKER)
+    
+    def is_there_a_clear_view(self, piece1: tuple, piece2: tuple):
+        """"
+        Checks if there is a clear line of sight between two pieces on a grid (same row or column).
+        It returns True if the pieces are aligned horizontally or vertically and there are no other 
+        pieces between them. If the pieces are not aligned or there are obstacles 
+        in the line of sight, it returns False.
+
+        Arg:
+        two tuple with the coordinates of the pieces
+        """
+
+        if piece1[0] == piece2[0]:
+            offset = 1 if piece1[1] <= piece2[1] else -1
+            for i in range(piece1[1] + offset, piece2[1], offset):
+                if self.__pieces[piece1[0]][i] != Piece.EMPTY:
+                    return False
+            return True
+        if piece1[1] == piece2[1]:
+            offset = 1 if piece1[0] <= piece2[0] else -1
+            for i in range(int(piece1[0] + offset), int(piece2[0]), offset):
+                if self.__pieces[i][piece1[1]] != Piece.EMPTY:
+                    return False
+            return True
+        
+        return False
+        
+    def get_black_coordinates(self):
+        """
+        Function that return a list of all the coordinates for the black pawns on the board at the moment
+        """
+        return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if self.__pieces[i, j] == Piece.ATTACKER]
+      
