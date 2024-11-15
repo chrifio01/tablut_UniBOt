@@ -22,7 +22,7 @@ import json
 
 from shared.loggers import logger
 
-from shared.utils import AbstractPlayer, strp_state, state_decoder, Turn
+from shared.utils import AbstractPlayer, strp_state, state_decoder, Turn, Action
 
 
 class Client:
@@ -118,12 +118,12 @@ class Client:
         except socket.error as e:
             logger.debug(f"Failed to send move to the server: {e}")
 
-    def _compute_move(self) -> dict:
+    def _compute_move(self) -> Action:
         """
         Computes the player's move.
 
         Returns:
-            dict: The player's computed move.
+            Action: The player's computed move.
         """
         return self.player.fit(self.current_state)
 
