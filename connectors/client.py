@@ -37,7 +37,7 @@ class Client:
         server_ip (str): The IP address of the server.
         port (int): The port number of the server.
         current_state (State): The current game state visible to the player.
-        player_socket (socket.socket): The socket connection to the server.
+        socket (socket.socket): The socket connection to the server.
 
     Methods:
         connect(): Connects to the server using the player's socket.
@@ -47,29 +47,30 @@ class Client:
         read_state(): Reads the current game state from the server.
     """
 
-    def __init__(self, *,
-                 player: AbstractPlayer, server_ip: str,
-                 port: int, settings: Dict[str, any]):
+    def __init__(self, *, player: AbstractPlayer, settings: Dict[str, any]):
         """
         Initializes a Client instance.
 
         Args:
             player (AbstractPlayer): The player instance that connects to the server.
-            server_ip (str): The IP address of the server.
-            port (int): The port number of the server.
             settings (Dict[str, any]): A dictionary containing the configuration settings.
                 The dictionary must include:
                 - 'current_state' (str): The current game state visible to the player.
                 - 'timeout' (int): The time limit for the connection in seconds.
-
+                - 'server_ip' (str): The IP address of the server.
+                - 'port' (int): The port number of the server.
         Notes:
             All arguments are keyword-only. The `settings` dictionary is required
-            and must contain the keys 'current_state' and 'timeout'.
+            and must contain the keys 'server_ip', 'port', 'current_state' and 'timeout'.
             These parameters are necessary for the Client to function properly.
         """
+        missing_keys = [key for key in ['server_ip', 'port', 'current_state', 'timeout']
+                        if key not in settings]
+        if missing_keys:
+            raise RuntimeError(f"Missing required settings: {missing_keys}")
         self.player = player
-        self.server_ip = server_ip
-        self.port = port
+        self.server_ip = settings['server_ip']
+        self.port = settings['port']
         self.current_state = strp_state(settings['current_state']) \
             if 'current_state' in settings else None
         self.timeout = settings['timeout']
@@ -100,7 +101,6 @@ class Client:
             logger.error("Connection refused by the server at %s:%d.", self.server_ip, self.port)
         except socket.error as e:
             logger.error("Failed to connect to %s:%d due to: %s", self.server_ip, self.port, e)
-
 
     def _send_name(self):
         """
@@ -173,22 +173,24 @@ class Client:
         """
         Main loop for the client to handle game state updates and send moves.
         """
-        self._send_name()
+        try:
+            self._send_name()
+            while True:
+                logger.debug("Reading state...")
+                self._read_state()
+                logger.debug(self.current_state)
 
-        while True:
-            logger.debug("Reading state...")
-            self._read_state()
-            logger.debug(self.current_state)
+                if self.current_state.turn in (Turn.DRAW, Turn.BLACK_WIN, Turn.WHITE_WIN):
+                    logger.debug("Game ended...\nResult: %s", self.current_state.turn.value)
+                    return
 
-            if self.current_state.turn in (Turn.DRAW, Turn.BLACK_WIN, Turn.WHITE_WIN):
-                logger.debug("Game ended...\nResult: %s", self.current_state.turn.value)
-                return
-
-            if self.current_state.turn.value == self.player.color.value:
-                logger.debug("Calculating move...")
-                action = self._compute_move()
-                logger.debug("Sending move:\n%s", action)
-                self._send_move(action)
-                logger.debug("Action sent")
-            else:
-                logger.debug("Waiting for opponent's move...")
+                if self.current_state.turn.value == self.player.color.value:
+                    logger.debug("Calculating move...")
+                    action = self._compute_move()
+                    logger.debug("Sending move:\n%s", action)
+                    self._send_move(action)
+                    logger.debug("Action sent")
+                else:
+                    logger.debug("Waiting for opponent's move...")
+        except ConnectionError as e:
+            logger.error("Failed to initialize the client: %s", e)

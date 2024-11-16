@@ -90,4 +90,3 @@ def strp_state(
         raise ValueError("Invalid state format: missing board or turn information.") from e
     except ValueError as e:
         raise ValueError("Invalid state format: could not parse board or turn.") from e
-    
