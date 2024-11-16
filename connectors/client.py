@@ -47,7 +47,9 @@ class Client:
         read_state(): Reads the current game state from the server.
     """
 
-    def __init__(self, *, player: AbstractPlayer, server_ip: str, port: int, settings: Dict[str, any]):
+    def __init__(self, *,
+                 player: AbstractPlayer, server_ip: str,
+                 port: int, settings: Dict[str, any]):
         """
         Initializes a Client instance.
 
@@ -68,7 +70,8 @@ class Client:
         self.player = player
         self.server_ip = server_ip
         self.port = port
-        self.current_state = strp_state(settings['current_state']) if 'current_state' in settings else None
+        self.current_state = strp_state(settings['current_state']) \
+            if 'current_state' in settings else None
         self.timeout = settings['timeout']
         self._connect()
 
@@ -84,19 +87,20 @@ class Client:
         Establishes a connection to the server.
         """
         try:
-            logger.debug(f"Connecting to {self.server_ip}:{self.port} as {self.player.name}...")
+            logger.debug("Connecting to %s:%d as %s...", self.server_ip, self.port, self.player.name)
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(self.timeout)
             self.socket.connect((self.server_ip, self.port))
             logger.debug("Connection established!")
         except socket.timeout:
-            logger.debug(f"Connection to {self.server_ip}:{self.port} timed out.")
+            logger.error("Connection to %s:%d timed out.", self.server_ip, self.port)
         except socket.gaierror:
-            logger.debug(f"Address-related error connecting to {self.server_ip}:{self.port}.")
+            logger.error("Address-related error connecting to %s:%d.", self.server_ip, self.port)
         except ConnectionRefusedError:
-            logger.debug(f"Connection refused by the server at {self.server_ip}:{self.port}.")
+            logger.error("Connection refused by the server at %s:%d.", self.server_ip, self.port)
         except socket.error as e:
-            logger.debug(f"Failed to connect to {self.server_ip}:{self.port} due to: {e}")
+            logger.error("Failed to connect to %s:%d due to: %s", self.server_ip, self.port, e)
+
 
     def _send_name(self):
         """
@@ -105,9 +109,9 @@ class Client:
         try:
             self.socket.send(struct.pack('>i', len(self.player.name)))
             self.socket.send(self.player.name.encode())
-            logger.debug(f"Declared name '{self.player.name}' to server.")
+            logger.debug("Declared name '%s' to server.", self.player.name)
         except socket.error as e:
-            logger.debug(f"Failed to send name to the server: {e}")
+            logger.error("Failed to send name to the server: %s", e)
 
     def _send_move(self, action):
         """
@@ -121,7 +125,7 @@ class Client:
             self.socket.send(struct.pack('>i', len(action_str)))
             self.socket.send(action_str.encode())
         except socket.error as e:
-            logger.debug(f"Failed to send move to the server: {e}")
+            logger.error("Failed to send move to the server: %s", e)
 
     def _compute_move(self) -> Action:
         """
@@ -144,7 +148,7 @@ class Client:
             current_state_server_bytes = self.socket.recv(len_bytes)
             self.current_state = json.loads(current_state_server_bytes, object_hook=state_decoder)
         except (socket.error, json.JSONDecodeError) as e:
-            logger.debug(f"Failed to read or decode the server response: {e}")
+            logger.error("Failed to read or decode the server response: %s", e)
             raise RuntimeError('Failed to decode server response') from e
 
     def _recvall(self, n: int) -> bytes:

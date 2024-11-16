@@ -33,7 +33,9 @@ import string
 from pydantic import BaseModel
 import numpy as np
 
-__all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square', 'strp_turn', 'Turn', 'strp_color']
+__all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square', 'strp_turn', 'Turn',
+           'strp_color']
+
 
 class Color(Enum):
     """
@@ -45,7 +47,8 @@ class Color(Enum):
     """
     WHITE = 'W'
     BLACK = 'B'
-    
+
+
 def strp_color(color_str: str) -> Color:
     """
     Parses a turn string (e.g., "W", "B", "WB", "BW" or "D") and returns the corresponding `Turn` enum value.
@@ -57,21 +60,33 @@ def strp_color(color_str: str) -> Color:
         Turn: The corresponding `Turn` enum value.
     """
     low = color_str.lower()
-    
+
     if low == 'white':
         return Color.WHITE
     elif low == 'black':
         return Color.BLACK
     else:
         raise ValueError(f"Invalid color string: {color_str}")
-    
+
+
 class Turn(Enum):
+    """
+    Enum representing the possible states of a player's turn in the Tablut game.
+
+    Attributes:
+        BLACK_TURN: Indicates that it is the black player's turn.
+        WHITE_TURN: Indicates that it is the white player's turn.
+        BLACK_WIN: Indicates that the black player has won the game.
+        WHITE_WIN: Indicates that the white player has won the game.
+        DRAW: Indicates that the game has ended in a draw.
+    """
     BLACK_TURN = 'B'
     WHITE_TURN = 'W'
     BLACK_WIN = 'BW'
     WHITE_WIN = 'WB'
     DRAW = 'D'
-    
+
+
 def strp_turn(turn_str: str) -> Turn:
     """
     Parses a turn string (e.g., "W", "B", "WB", "BW" or "D") and returns the corresponding `Turn` enum value.
@@ -83,20 +98,21 @@ def strp_turn(turn_str: str) -> Turn:
         Turn: The corresponding `Turn` enum value.
     """
     low = turn_str.lower()
-    
+
     if low == 'white':
         return Turn.WHITE_TURN
-    elif low == 'black':
+    if low == 'black':
         return Turn.BLACK_TURN
-    elif low == 'whitewin':
+    if low == 'whitewin':
         return Turn.WHITE_WIN
-    elif low == 'blackwin':
+    if low == 'blackwin':
         return Turn.BLACK_WIN
-    elif low == 'draw':
+    if low == 'draw':
         return Turn.DRAW
     else:
         raise ValueError(f"Invalid turn string: {turn_str}")
-    
+
+
 class Action(BaseModel):
     """
     Model representing a player's move, consisting of the start and destination squares and the player's color.
@@ -112,7 +128,7 @@ class Action(BaseModel):
     from_: str
     to_: str
     turn: Turn
-    
+
     def __str__(self) -> str:
         """
         Returns a JSON-formatted string representing the action.
@@ -128,6 +144,7 @@ class Action(BaseModel):
             },
             indent=4
         )
+
 
 class Piece(Enum):
     """
@@ -145,7 +162,8 @@ class Piece(Enum):
     KING = 'K'
     THRONE = 'T'
     EMPTY = 'O'
-    
+
+
 def _strp_piece(piece_str: str) -> Piece:
     lower_str = piece_str.lower()
     if lower_str == 'empty':
@@ -161,7 +179,8 @@ def _strp_piece(piece_str: str) -> Piece:
     raise ValueError(f"Invalid piece string: {piece_str}")
 
 
-def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:
+def strp_board(board_str: str) -> Annotated[
+    np.ndarray, "The corresponding board configuration from a string representation of the pieces sent from the server"]:
     """
     Converts a board string representation into a numpy array of `Piece` values.
 
@@ -174,7 +193,6 @@ def strp_board(board_str: str) -> Annotated[np.ndarray, "The corresponding board
     rows = board_str.strip().split('\n')
     board_array = np.array([[Piece(char) for char in row] for row in rows[::-1]], dtype=Piece)
     return board_array
-
 
 
 def strp_square(square_str: str) -> Tuple[int, int]:
@@ -192,14 +210,15 @@ def strp_square(square_str: str) -> Tuple[int, int]:
     """
     if len(square_str) != 2:
         raise ValueError("Invalid square format")
-    
+
     if square_str[0].lower() not in string.ascii_lowercase or square_str[1] not in string.digits:
         raise ValueError("Invalid square format")
-    
+
     column = ord(square_str[0].lower()) - ord('a')
     row = int(square_str[1]) - 1
-    
+
     return row, column
+
 
 def strf_square(position: Tuple[int, int]) -> str:
     """
@@ -216,11 +235,12 @@ def strf_square(position: Tuple[int, int]) -> str:
     """
     if position[1] > len(string.ascii_lowercase) - 1 or position[0] < 0:
         raise ValueError("Invalid position")
-    
+
     column = string.ascii_lowercase[position[1]]
     row = position[0] + 1
-    
+
     return f"{column}{row}"
+
 
 def _check_single_king_and_throne(pieces: np.ndarray) -> bool:
     """
@@ -237,23 +257,24 @@ def _check_single_king_and_throne(pieces: np.ndarray) -> bool:
     """
     king_count = np.count_nonzero(pieces == Piece.KING)
     throne_count = np.count_nonzero(pieces == Piece.THRONE)
-    
+
     if king_count > 1:
         raise ValueError("Invalid board: more than one KING found.")
     if king_count == 0:
         raise ValueError("Invalid board: no KING found.")
-    
+
     if throne_count > 1:
         raise ValueError("Invalid board: more than one THRONE found.")
-    
+
     center = pieces[pieces.shape[0] // 2][pieces.shape[1] // 2]
 
     if center not in (Piece.THRONE, Piece.KING) and throne_count == 0:
         raise ValueError("Invalid board: center has no THRONE or KING.")
     if center not in (Piece.THRONE,) and throne_count == 1:
         raise ValueError("Invalid board: the THRONE is not in the center")
-    
+
     return True
+
 
 class Board:
     """
@@ -267,11 +288,13 @@ class Board:
     Methods:
         update_pieces(action: Action): Updates board state based on an action.
         get_piece(position: Tuple[int, int]) -> Piece: Returns the piece at a specific position.
-    """    
+    """
+
     def __init__(
-            self, 
-            initial_board_state: Annotated[np.ndarray, "The initial pieces configuration as a 2D np array referenced as (col, row) pairs"]
-        ):
+            self,
+            initial_board_state: Annotated[
+                np.ndarray, "The initial pieces configuration as a 2D np array referenced as (col, row) pairs"]
+    ):
         """
         Initializes the board with an initial state and validates it.
 
@@ -282,30 +305,32 @@ class Board:
             ValueError: If there are multiple KINGs or THRONEs on the board.
         """
         _check_single_king_and_throne(initial_board_state)
-        
+
         shape = initial_board_state.shape
-        self.__height = shape[0]    # first index is the row
-        self.__width = shape[1]     # second index is the column
+        self.__height = shape[0]  # first index is the row
+        self.__width = shape[1]  # second index is the column
         self.__pieces = initial_board_state
         self._initialized = True
-    
+
     @property
     def height(self) -> int:
         """Returns the board height."""
         return self.__height
-    
+
     @property
     def width(self) -> int:
         """Returns the board width."""
         return self.__width
-    
+
     @property
-    def pieces(self) -> Annotated[np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]:
+    def pieces(self) -> Annotated[
+        np.ndarray, "The current pieces configuration as a matrix of height x width dim Piece objs"]:
         """Returns the current board configuration."""
         return self.__pieces
-    
+
     @pieces.setter
-    def pieces(self, new_board_state: Annotated[np.ndarray, "The new pieces configuration sent from the server converted in np.array"]) -> None:
+    def pieces(self, new_board_state: Annotated[
+        np.ndarray, "The new pieces configuration sent from the server converted in np.array"]) -> None:
         """
         Updates the board configuration, ensuring valid dimensions and piece constraints.
 
@@ -318,11 +343,11 @@ class Board:
         shape = new_board_state.shape
         if shape[0] > self.__height or shape[1] > self.__width:
             raise ValueError("Invalid new board state size")
-        
+
         _check_single_king_and_throne(new_board_state)
-        
+
         self.__pieces = new_board_state
-        
+
     def update_pieces(self, action: Action) -> None:
         """
         Executes an action by moving a piece from start to destination on the board.
@@ -335,9 +360,9 @@ class Board:
         """
         from_indexes = strp_square(action.from_)
         to_indexes = strp_square(action.to_)
-        
+
         moving_piece = self.__pieces[from_indexes]
-        
+
         if moving_piece not in (Piece.DEFENDER, Piece.ATTACKER, Piece.KING):
             raise ValueError(f"Cannot move {moving_piece} from {action.from_} to {action.to_}.")
         if action.turn.value == Color.WHITE.value and moving_piece not in (Piece.DEFENDER, Piece.KING):
@@ -349,7 +374,7 @@ class Board:
         else:
             self.__pieces[from_indexes] = Piece.EMPTY
         self.__pieces[to_indexes] = moving_piece
-        
+
     def get_piece(self, position: Tuple[int, int]) -> Piece:
         """
         Returns the piece at a given position on the board.
@@ -361,7 +386,7 @@ class Board:
             Piece: The piece located at `position`.
         """
         return self.__pieces[position]
-    
+
     def __str__(self) -> str:
         """
         Returns a string representation of the board's current state.
@@ -370,6 +395,7 @@ class Board:
             str: A string representation of the board.
         """
         return '\n'.join(''.join(piece.value for piece in row) for row in self.__pieces[::-1])
+
 
 def parse_state_board(state_board: List[List[str]]) -> Board:
     pieces = np.array([[_strp_piece(piece_str) for piece_str in row] for row in state_board])

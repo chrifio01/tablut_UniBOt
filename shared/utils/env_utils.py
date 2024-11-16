@@ -19,8 +19,8 @@ Usage Example:
 
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict
-from .game_utils import Color, Board, strp_board, strp_turn, parse_state_board, Turn
-import numpy as np
+from .game_utils import Board, strp_board, strp_turn, parse_state_board, Turn
+from shared.loggers import logger
 
 __all__ = ['State', 'strp_state', 'state_decoder']
 
