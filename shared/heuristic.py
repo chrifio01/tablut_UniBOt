@@ -6,7 +6,7 @@ The main heuristic function integrates move validation and calculates a heuristi
 """
 
 from shared.utils.env_utils import king_distance_from_center, king_surrounded, position_weight, pawns_around, State
-from shared.utils.game_utils import Action, Board, Color
+from shared.utils.game_utils import Action, Board, Turn
 from .move_checker import MoveChecker
 from .consts import ALPHA_W, BETA_W, GAMMA_W, THETA_W, EPSILON_W, OMEGA_W, ALPHA_B, BETA_B, GAMMA_B, THETA_B
 
@@ -34,7 +34,7 @@ def _white_heuristic(board: Board):
 
     # king distance
     fitness += king_distance_from_center(board, king_pos) * GAMMA_W
-
+    
     # free ways
     free_paths = [board.is_there_a_clear_view(black_pawn, king_pos)
                   for black_pawn in board.get_black_coordinates()]
@@ -108,9 +108,9 @@ def heuristic(state: State, move: Action):
         board.update_pieces(move)
 
 
-        if move.turn == Color.WHITE:
+        if move.turn == Turn.WHITE_TURN:
             return _white_heuristic(board) - _black_heuristic(board)
-        if move.turn == Color.BLACK:
+        if move.turn == Turn.BLACK_TURN:
             return _black_heuristic(board) - _white_heuristic(board)
         return None
     return -9999
