@@ -15,6 +15,7 @@ from abc import ABC, abstractmethod
 from .game_utils import Color, Action
 from .env_utils import State
 
+
 class AbstractPlayer(ABC):
     """
     Abstract base class for players in Tablut, defining required properties and methods for
@@ -32,9 +33,9 @@ class AbstractPlayer(ABC):
     """
 
     def __init__(self):
-        self.__current_state = None
-        self.__name = ""
-        self.__color = None
+        self._current_state = None
+        self._name = ""
+        self._color = None
 
     @property
     def current_state(self) -> State:
@@ -44,7 +45,7 @@ class AbstractPlayer(ABC):
         Returns:
             State: The current state of the game as observed by the player.
         """
-        return self.__current_state
+        return self._current_state
 
     @current_state.setter
     def current_state(self, new_state: State) -> None:
@@ -54,7 +55,7 @@ class AbstractPlayer(ABC):
         Args:
             new_state (State): The new state of the game for the player.
         """
-        self.__current_state = new_state
+        self._current_state = new_state
 
     @property
     def name(self) -> str:
@@ -64,7 +65,7 @@ class AbstractPlayer(ABC):
         Returns:
             str: The name or identifier of the player.
         """
-        return self.__name
+        return self._name
 
     @property
     def color(self) -> Color:
@@ -74,7 +75,7 @@ class AbstractPlayer(ABC):
         Returns:
             Color: The color of the player, either WHITE or BLACK.
         """
-        return self.__color
+        return self._color
 
     @abstractmethod
     def send_move(self) -> None:

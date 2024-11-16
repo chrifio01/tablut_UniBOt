@@ -8,13 +8,13 @@ Classes:
 
 from typing import List, Tuple
 import numpy as np
-from .utils import State, Action, strf_square, strp_square, Piece, Color
+from .utils import State, Action, strf_square, strp_square, Piece, Turn
 from .consts import CAMPS
 from .exceptions import InvalidAction
 
 class MoveChecker:
     """
-    A class that provides methods to check the validity of moves in the Tablut game, 
+    A class that provides methods to check the validity of moves in the Tablut game,
     ensuring they adhere to the game's rules and constraints.
     """
 
@@ -34,11 +34,11 @@ class MoveChecker:
 
     @classmethod
     def _check_for_jumps(
-        cls,
-        state: State,
-        action_from: Tuple[int, int],
-        action_to: Tuple[int, int]
-        ) -> None:
+            cls,
+            state: State,
+            action_from: Tuple[int, int],
+            action_to: Tuple[int, int]
+    ) -> None:
         """
         Checks for illegal jumps over non-empty spaces, the throne, or camps during a move.
 
@@ -65,12 +65,12 @@ class MoveChecker:
             raise InvalidAction("Diagonal moves are not allowed.")
 
         step = 1 if start < end else -1
-        
+
         for pos in range(start + step, end, step):
             current_position = (fixed, pos) if is_horizontal_move else (pos, fixed)
             pawn = board.get_piece(current_position)
             is_camp_pos = cls._is_camp(*current_position)
-            
+
             if pawn != Piece.EMPTY:
                 if pawn == Piece.THRONE:
                     raise InvalidAction("Cannot jump over the throne.")
@@ -100,7 +100,7 @@ class MoveChecker:
         board_height, board_width = state.board.height, state.board.width
         turn = move.turn
         assert state.turn == move.turn
-        
+
         if action_to == action_from:
             raise InvalidAction("No movement.")
         if state.board.get_piece(action_from) == Piece.THRONE:
@@ -108,10 +108,10 @@ class MoveChecker:
         if state.board.get_piece(action_from) == Piece.EMPTY:
             raise InvalidAction("Nothing to move.")
         is_valid_white_pieces = state.board.get_piece(action_from) not in [Piece.DEFENDER, Piece.KING]
-        if turn == Color.WHITE and is_valid_white_pieces:
-            raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}. Found {state.board.get_piece(action_from)}")
-        if turn == Color.BLACK and state.board.get_piece(action_from) != Piece.ATTACKER:
-            raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}. Found {state.board.get_piece(action_from)}")
+        if turn == Turn.WHITE_TURN and is_valid_white_pieces:
+            raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}.")
+        if turn == Turn.BLACK_TURN and state.board.get_piece(action_from) != Piece.ATTACKER:
+            raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}.")
 
         if col_to >= board_width or row_to >= board_height:
             raise InvalidAction(f"Move {move.to_} is outside board bounds.")
@@ -120,7 +120,8 @@ class MoveChecker:
         if cls._is_camp(*action_to) and not cls._is_camp(*action_from):
             raise InvalidAction(f"Cannot enter a camp from outside (from {action_from} to {action_to}).")
         if cls._is_camp(*action_to) and cls._is_camp(*action_from):
-            if (row_from == row_to and abs(col_from - col_to) > 5) or (col_from == col_to and abs(row_from - row_to) > 5):
+            if (row_from == row_to and abs(col_from - col_to) > 5) or (
+                    col_from == col_to and abs(row_from - row_to) > 5):
                 raise InvalidAction(f"Move from {action_from} to {action_to} exceeds maximum distance within camps.")
         if state.board.get_piece(action_to) != Piece.EMPTY:
             raise InvalidAction(f"Cannot move into a non-empty cell: {action_to}")
@@ -145,18 +146,21 @@ class MoveChecker:
         turn = state.turn
         board_height, board_width = state.board.height, state.board.width
 
-        if turn == Color.WHITE:
-            positions = list(zip(*np.where((state.board.pieces == Piece.DEFENDER) | (state.board.pieces == Piece.KING))))
+        if turn == Turn.WHITE_TURN:
+            positions = list(
+                zip(*np.where((state.board.pieces == Piece.DEFENDER) | (state.board.pieces == Piece.KING))))
         else:
             positions = list(zip(*np.where(state.board.pieces == Piece.ATTACKER)))
 
         for row, column in positions:
             for index in range(board_height):
                 if index != row:
-                    all_actions.append(Action(from_=strf_square((row, column)), to_=strf_square((index, column)), turn=turn))
+                    all_actions.append(
+                        Action(from_=strf_square((row, column)), to_=strf_square((index, column)), turn=turn))
             for index in range(board_width):
                 if index != column:
-                    all_actions.append(Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn))
+                    all_actions.append(
+                        Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn))
 
         return all_actions
 
