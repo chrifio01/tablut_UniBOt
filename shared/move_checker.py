@@ -98,7 +98,8 @@ class MoveChecker:
         row_from, col_from = action_from
         row_to, col_to = action_to
         board_height, board_width = state.board.height, state.board.width
-        turn = state.turn
+        turn = move.turn
+        assert state.turn == move.turn
 
         if action_to == action_from:
             raise InvalidAction("No movement.")

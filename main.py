@@ -1,27 +1,42 @@
-"""
-    Entrypoint for the TablutClient.
-"""
-import os
-from shared.random_player import RandomPlayer
-from shared.utils import strp_color
-from shared.consts import INITIAL_STATE
-from connectors.client import Client
+import unittest
+import numpy as np
 
-PLAYER_COLOR = os.environ['PLAYER_COLOR']
-TIMEOUT = os.environ['TIMEOUT']
-SERVER_IP = os.environ['SERVER_IP']
-WEBSOCKET_PORT = os.environ['WEBSOCKET_PORT']
+from shared.consts import INITIAL_STATE
+from shared.heuristic import _white_heuristic, _black_heuristic, heuristic
+from shared.utils import strp_state
+from shared.utils.game_utils import Board, Action, Color, Piece, Turn
+from shared.utils.env_utils import State
+
+class TestHeuristicMethods(unittest.TestCase):
+
+    def setUp(self):
+        # Setup a sample board state for testing
+        self.initial_board_state = np.array([
+            [Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY],
+            [Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY],
+            [Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY],
+            [Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY],
+            [Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.KING, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY],
+            [Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY],
+            [Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY],
+            [Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY],
+            [Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY, Piece.EMPTY]
+        ])
+        self.board = Board(self.initial_board_state)
+
+    def test_white_heuristic(self):
+        fitness = _white_heuristic(self.board)
+        self.assertIsInstance(fitness, float)
+
+    def test_black_heuristic(self):
+        fitness = _black_heuristic(self.board)
+        self.assertIsInstance(fitness, float)
+
+    def test_heuristic(self):
+        state = strp_state(INITIAL_STATE)
+        move = Action(from_="e3", to_="f3", turn=Turn.WHITE_TURN)
+        fitness = heuristic(state, move)
+        self.assertIsInstance(fitness, float)
 
 if __name__ == '__main__':
-    settings = {
-        'current_state': INITIAL_STATE,
-        'timeout': int(TIMEOUT),
-        'server_ip': SERVER_IP,
-        'port': int(WEBSOCKET_PORT)
-    }
-    player = RandomPlayer(color=strp_color(PLAYER_COLOR))
-    client = Client(player=player, settings=settings)
-    try:
-        client.main()
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    unittest.main()
