@@ -65,8 +65,7 @@ def strp_color(color_str: str) -> Color:
         return Color.WHITE
     if low == 'black':
         return Color.BLACK
-    else:
-        raise ValueError(f"Invalid color string: {color_str}")
+    raise ValueError(f"Invalid color string: {color_str}")
 
 
 class Turn(Enum):

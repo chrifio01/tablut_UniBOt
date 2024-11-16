@@ -54,6 +54,7 @@ def state_decoder(obj: dict):
         turn = strp_turn(obj['turn'])
         board = parse_state_board(obj['board'])
         return State(board=board, turn=turn)
+    return None
     
 def strp_state(
     state_str: str
