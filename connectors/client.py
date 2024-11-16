@@ -7,7 +7,7 @@ Attributes:
     server_ip (str): The IP address of the server.
     port (int): The port number of the server.
     current_state (State): The current game state visible to the player.
-    player_socket (socket.socket): The socket connection to the server.
+    socket (socket.socket): The socket connection to the server.
 Methods:
     connect(player, server_ip, port) -> socket.socket:
             Connects to the server using the player's socket.
