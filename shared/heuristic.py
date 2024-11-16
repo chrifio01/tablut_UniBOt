@@ -16,13 +16,13 @@ def _white_heuristic(board: Board):
     """
     Returns the float value of the current state of the board for white
     """
-    
-    
 
-    king_pos = board.king_pos() 
 
-        
-    fitness = 0 
+
+    king_pos = board.king_pos()
+
+
+    fitness = 0
 
     # Blackpieces
     num_blacks = board.num_black()
@@ -37,7 +37,7 @@ def _white_heuristic(board: Board):
 
     # free ways
     free_paths = [board.is_there_a_clear_view(black_pawn, king_pos)
-                for black_pawn in board.get_black_coordinates()]
+                  for black_pawn in board.get_black_coordinates()]
     # theta0 times the n° free ways to king
     fitness -= OMEGA_W * sum(free_paths)
 
@@ -45,10 +45,10 @@ def _white_heuristic(board: Board):
     king_vals, _ = king_surrounded(board)
     fitness -= king_vals * THETA_W
 
-    fitness += position_weight(king_pos) * EPSILON_W # Return maximum values when king is in escape tiles !!WIN CONFIG!! 
+    fitness += position_weight(king_pos) * EPSILON_W # Return maximum values when king is in escape tiles !!WIN CONFIG!!
 
     return fitness
-    
+
 
 def _black_heuristic(board: Board):
     """
@@ -59,12 +59,12 @@ def _black_heuristic(board: Board):
     - Free path to the king
     - A coefficient of encirclement of the king
     """
-        
-   
+
+
 
     fitness = 0
 
-        
+
 
     king_pos = board.king_pos()
 
@@ -81,14 +81,14 @@ def _black_heuristic(board: Board):
 
     # Free path to the king
     free_paths = [board.is_there_a_clear_view(black_pawn, king_pos)
-                for black_pawn in board.get_black_coordinates()]
+                  for black_pawn in board.get_black_coordinates()]
     # theta0 times the n° free ways to king
     fitness += THETA_B * sum(free_paths)
 
 
     return fitness
 
-   
+
 
 def heuristic(state: State, move: Action):
     """

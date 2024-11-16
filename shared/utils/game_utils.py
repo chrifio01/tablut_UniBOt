@@ -7,6 +7,7 @@ Classes:
     Piece: Enum for different game pieces, including DEFENDER, ATTACKER, KING, THRONE, and EMPTY.
     Action: Model for representing a player's action, including the starting position, destination, and turn.
     Board: Singleton class representing the Tablut board, managing piece positions and board properties.
+    Turn: Enum representing the possible states of a player's turn in the Tablut game.
 
 Functions:
     strp_board(board_str: str) -> np.ndarray:
@@ -17,6 +18,15 @@ Functions:
         
     strf_square(position: Tuple[int, int]) -> str:
         Formats a board coordinate (row, column) back into a string representation (e.g., "a1").
+
+    strp_color(color_str: str) -> Color:
+        Parses a color string (e.g., "W" or "B") and returns the corresponding `Color` enum value.
+
+    strp_turn(turn_str: str) -> Turn:
+        Parses a turn string (e.g., "W", "B", "WB", "BW" or "D") and returns the corresponding `Turn` enum value.
+
+    parse_state_board(state_board: List[List[str]]) -> Board:
+        Parses a 2D list of piece strings into a `Board` object.
 
 Usage Example:
     Initialize and update the board state:
@@ -394,7 +404,65 @@ class Board:
         """
         return '\n'.join(''.join(piece.value for piece in row) for row in self.__pieces[::-1])
 
-def parse_state_board(state_board: List[List[str]]) -> Board:
+    def king_pos(self):
+        """
+        Return the king position on the board as a tuple of two elements.
+        Raises a ValueError if no king is found.
+        """
+        king_position = np.where(self.__pieces == Piece.KING)
+
+        if king_position[0].size == 0:
+            raise ValueError("King not found on the board")
+
+        return (king_position[0][0], king_position[1][0])
+
+
+    def num_white(self):
+        """
+        Return the number of white pawns on the board
+        """
+        return np.count_nonzero(self.__pieces == Piece.DEFENDER)
+
+    def num_black(self):
+        """
+        Return the number of black pawns on the board
+        """
+        return np.count_nonzero(self.__pieces == Piece.ATTACKER)
+
+    def is_there_a_clear_view(self, piece1: tuple, piece2: tuple):
+        """"
+        Checks if there is a clear line of sight between two pieces on a grid (same row or column).
+        It returns True if the pieces are aligned horizontally or vertically and there are no other
+        pieces between them. If the pieces are not aligned or there are obstacles
+        in the line of sight, it returns False.
+
+        Arg:
+        two tuple with the coordinates of the pieces
+        """
+
+        if piece1[0] == piece2[0]:
+            offset = 1 if piece1[1] <= piece2[1] else -1
+            for i in range(piece1[1] + offset, piece2[1], offset):
+                if self.__pieces[piece1[0]][i] != Piece.EMPTY:
+                    return False
+            return True
+        if piece1[1] == piece2[1]:
+            offset = 1 if piece1[0] <= piece2[0] else -1
+            for i in range(int(piece1[0] + offset), int(piece2[0]), offset):
+                if self.__pieces[i][piece1[1]] != Piece.EMPTY:
+                    return False
+            return True
+
+        return False
+
+    def get_black_coordinates(self):
+        """
+        Function that return a list of all the coordinates for the black pawns on the board at the moment
+        """
+        return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if self.__pieces[i, j] == Piece.ATTACKER]
+
+
+def parse_state_board(state_board: List[List[str]]) -> Board :
     """
     Parses a 2D list of piece strings into a Board object.
 

@@ -173,24 +173,21 @@ class Client:
         """
         Main loop for the client to handle game state updates and send moves.
         """
-        try:
-            self._send_name()
-            while True:
-                logger.debug("Reading state...")
-                self._read_state()
-                logger.debug(self.current_state)
+        self._send_name()
+        while True:
+            logger.debug("Reading state...")
+            self._read_state()
+            logger.debug(self.current_state)
 
-                if self.current_state.turn in (Turn.DRAW, Turn.BLACK_WIN, Turn.WHITE_WIN):
-                    logger.debug("Game ended...\nResult: %s", self.current_state.turn.value)
-                    return
+            if self.current_state.turn in (Turn.DRAW, Turn.BLACK_WIN, Turn.WHITE_WIN):
+                logger.debug("Game ended...\nResult: %s", self.current_state.turn.value)
+                return
 
-                if self.current_state.turn.value == self.player.color.value:
-                    logger.debug("Calculating move...")
-                    action = self._compute_move()
-                    logger.debug("Sending move:\n%s", action)
-                    self._send_move(action)
-                    logger.debug("Action sent")
-                else:
-                    logger.debug("Waiting for opponent's move...")
-        except ConnectionError as e:
-            logger.error("Failed to initialize the client: %s", e)
+            if self.current_state.turn.value == self.player.color.value:
+                logger.debug("Calculating move...")
+                action = self._compute_move()
+                logger.debug("Sending move:\n%s", action)
+                self._send_move(action)
+                logger.debug("Action sent")
+            else:
+                logger.debug("Waiting for opponent's move...")

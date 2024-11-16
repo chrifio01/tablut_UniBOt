@@ -104,6 +104,8 @@ class MoveChecker:
             raise InvalidAction("No movement.")
         if state.board.get_piece(action_from) == Piece.THRONE:
             raise InvalidAction("Cannot move the throne.")
+        if state.board.get_piece(action_from) == Piece.EMPTY:
+            raise InvalidAction("Nothing to move.")
         is_valid_white_pieces = state.board.get_piece(action_from) not in [Piece.DEFENDER, Piece.KING]
         if turn == Turn.WHITE_TURN and is_valid_white_pieces:
             raise InvalidAction(f"Player {turn} attempted to move opponent's piece in {action_from}.")
