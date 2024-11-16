@@ -15,10 +15,13 @@ WEBSOCKET_PORT = os.environ['WEBSOCKET_PORT']
 if __name__ == '__main__':
     settings = {
         'current_state': INITIAL_STATE,
-        'timeout': 60,
+        'timeout': int(TIMEOUT),
         'server_ip': SERVER_IP,
         'port': int(WEBSOCKET_PORT)
     }
     player = RandomPlayer(color=strp_color(PLAYER_COLOR))
     client = Client(player=player, settings=settings)
-    client.main()
+    try:
+        client.main()
+    except Exception as e:
+        print(f"An error occurred: {e}")
