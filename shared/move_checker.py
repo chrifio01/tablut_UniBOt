@@ -14,12 +14,12 @@ from .exceptions import InvalidAction
 
 class MoveChecker:
     """
-    A class that provides methods to check the validity of moves in the Tablut game, 
+    A class that provides methods to check the validity of moves in the Tablut game,
     ensuring they adhere to the game's rules and constraints.
     """
 
     @staticmethod
-    def __is_camp(row: int, col: int) -> bool:
+    def _is_camp(row: int, col: int) -> bool:
         """
         Determines if a specified position is a camp.
 
@@ -33,12 +33,12 @@ class MoveChecker:
         return (row, col) in CAMPS
 
     @classmethod
-    def __check_for_jumps(
-        cls,
-        state: State,
-        action_from: Tuple[int, int],
-        action_to: Tuple[int, int]
-        ) -> None:
+    def _check_for_jumps(
+            cls,
+            state: State,
+            action_from: Tuple[int, int],
+            action_to: Tuple[int, int]
+    ) -> None:
         """
         Checks for illegal jumps over non-empty spaces, the throne, or camps during a move.
 
@@ -69,13 +69,13 @@ class MoveChecker:
         for pos in range(start + step, end, step):
             current_position = (fixed, pos) if is_horizontal_move else (pos, fixed)
             pawn = board.get_piece(current_position)
-            is_camp_pos = cls.__is_camp(*current_position)
+            is_camp_pos = cls._is_camp(*current_position)
 
             if pawn != Piece.EMPTY:
                 if pawn == Piece.THRONE:
                     raise InvalidAction("Cannot jump over the throne.")
                 raise InvalidAction("Cannot jump over a pawn.")
-            if is_camp_pos and not cls.__is_camp(*action_from):
+            if is_camp_pos and not cls._is_camp(*action_from):
                 raise InvalidAction("Cannot jump over a camp.")
 
     @classmethod
@@ -114,15 +114,18 @@ class MoveChecker:
             raise InvalidAction(f"Move {move.to_} is outside board bounds.")
         if action_to == (board_height // 2, board_width // 2):
             raise InvalidAction("Cannot move onto the throne.")
-        if cls.__is_camp(*action_to) and not cls.__is_camp(*action_from):
+        if cls._is_camp(*action_to) and not cls._is_camp(*action_from):
             raise InvalidAction(f"Cannot enter a camp from outside (from {action_from} to {action_to}).")
-        if cls.__is_camp(*action_to) and cls.__is_camp(*action_from):
-            if (row_from == row_to and abs(col_from - col_to) > 5) or (col_from == col_to and abs(row_from - row_to) > 5):
+        if cls._is_camp(*action_to) and cls._is_camp(*action_from):
+            if (row_from == row_to and abs(col_from - col_to) > 5) or (
+                    col_from == col_to and abs(row_from - row_to) > 5):
                 raise InvalidAction(f"Move from {action_from} to {action_to} exceeds maximum distance within camps.")
+        if state.board.get_piece(action_to) != Piece.EMPTY:
+            raise InvalidAction(f"Cannot move into a non-empty cell: {action_to}")
         if row_from != row_to and col_from != col_to:
             raise InvalidAction(f"Diagonal moves are not allowed (from {action_from} to {action_to}).")
 
-        cls.__check_for_jumps(state, action_from, action_to)
+        cls._check_for_jumps(state, action_from, action_to)
         return True
 
     @staticmethod
@@ -141,17 +144,20 @@ class MoveChecker:
         board_height, board_width = state.board.height, state.board.width
 
         if turn == Turn.WHITE_TURN:
-            positions = list(zip(*np.where((state.board.pieces == Piece.DEFENDER) | (state.board.pieces == Piece.KING))))
+            positions = list(
+                zip(*np.where((state.board.pieces == Piece.DEFENDER) | (state.board.pieces == Piece.KING))))
         else:
             positions = list(zip(*np.where(state.board.pieces == Piece.ATTACKER)))
 
         for row, column in positions:
             for index in range(board_height):
                 if index != row:
-                    all_actions.append(Action(from_=strf_square((row, column)), to_=strf_square((index, column)), turn=turn))
+                    all_actions.append(
+                        Action(from_=strf_square((row, column)), to_=strf_square((index, column)), turn=turn))
             for index in range(board_width):
                 if index != column:
-                    all_actions.append(Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn))
+                    all_actions.append(
+                        Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn))
 
         return all_actions
 
