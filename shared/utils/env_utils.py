@@ -20,7 +20,7 @@ Usage Example:
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict
 from shared.consts import WEIGHTS
-from .game_utils import Color, Board, strp_board, Piece, strp_turn, parse_state_board, Turn
+from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn
 
 __all__ = ['State', 'strp_state', 'state_decoder']
 
