@@ -42,7 +42,7 @@ class Client:
         connect() -> socket.socket: Connects to the server using the player's socket.
         send_name(): Sends the player's name to the server.
         send_move(action): Sends the player's move to the server.
-        compute_move() -> dict: Computes the player's move.
+        compute_move() -> Action: Computes the player's move.
         read_state(): Reads the current game state from the server.
     """
 
@@ -109,7 +109,7 @@ class Client:
         Sends the player's move to the server.
 
         Args:
-            action (dict): The player's move as a dictionary.
+            action (Action): The player's move as an Action.
         """
         try:
             action_str = str(action)
