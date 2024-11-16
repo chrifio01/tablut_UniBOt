@@ -9,7 +9,8 @@ Attributes:
     current_state (State): The current game state visible to the player.
     player_socket (socket.socket): The socket connection to the server.
 Methods:
-    connect(player, server_ip, port) -> socket.socket: Connects to the server using the player's socket.
+    connect(player, server_ip, port) -> socket.socket:
+            Connects to the server using the player's socket.
     send_name(): Sends the player's name to the server.
     send_move(action): Sends the player's move to the server.
     compute_move() -> dict: Computes the player's move.
@@ -19,11 +20,11 @@ Methods:
 import socket
 import struct
 import json
+from typing import Dict
 
 from shared.loggers import logger
 
 from shared.utils import AbstractPlayer, strp_state, state_decoder, Turn, Action
-
 
 class Client:
     """
@@ -39,14 +40,14 @@ class Client:
         player_socket (socket.socket): The socket connection to the server.
 
     Methods:
-        connect() -> socket.socket: Connects to the server using the player's socket.
+        connect(): Connects to the server using the player's socket.
         send_name(): Sends the player's name to the server.
         send_move(action): Sends the player's move to the server.
         compute_move() -> Action: Computes the player's move.
         read_state(): Reads the current game state from the server.
     """
 
-    def __init__(self, player: AbstractPlayer, server_ip: str, port: int, current_state=None, timeout: int = 60):
+    def __init__(self, *, player: AbstractPlayer, server_ip: str, port: int, settings: Dict[str, any]):
         """
         Initializes a Client instance.
 
@@ -54,14 +55,21 @@ class Client:
             player (AbstractPlayer): The player instance that connects to the server.
             server_ip (str): The IP address of the server.
             port (int): The port number of the server.
-            current_state (optional): The current game state visible to the player.
-            timeout (int, optional): The time limit for the connection. Defaults to 60 seconds.
+            settings (Dict[str, any]): A dictionary containing the configuration settings.
+                The dictionary must include:
+                - 'current_state' (str): The current game state visible to the player.
+                - 'timeout' (int): The time limit for the connection in seconds.
+
+        Notes:
+            All arguments are keyword-only. The `settings` dictionary is required
+            and must contain the keys 'current_state' and 'timeout'.
+            These parameters are necessary for the Client to function properly.
         """
         self.player = player
-        self.timeout = timeout
         self.server_ip = server_ip
         self.port = port
-        self.current_state = strp_state(current_state) if current_state else None
+        self.current_state = strp_state(settings['current_state']) if 'current_state' in settings else None
+        self.timeout = settings['timeout']
         self._connect()
 
     def __del__(self):
@@ -74,9 +82,6 @@ class Client:
     def _connect(self):
         """
         Establishes a connection to the server.
-
-        Returns:
-            socket.socket: The socket connection object.
         """
         try:
             logger.debug(f"Connecting to {self.server_ip}:{self.port} as {self.player.name}...")
@@ -140,7 +145,7 @@ class Client:
             self.current_state = json.loads(current_state_server_bytes, object_hook=state_decoder)
         except (socket.error, json.JSONDecodeError) as e:
             logger.debug(f"Failed to read or decode the server response: {e}")
-            raise RuntimeError('Failed to decode server response')
+            raise RuntimeError('Failed to decode server response') from e
 
     def _recvall(self, n: int) -> bytes:
         """
