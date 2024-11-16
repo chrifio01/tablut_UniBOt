@@ -218,5 +218,8 @@ class FeaturizeState:
         #king_surrounded(board_str)[0],
         b_heur_layer = np.array([board_str.num_black(), board_str.num_white(), pawns_around(board_str, board_str.king_pos(), 1)])
 
-        input_tensor = np.array([position_layer, turn_layer, w_heur_layer, b_heur_layer], dtype="object")
+        input_tensor = {"board_input": position_layer,
+                        "turn_input": turn_layer, 
+                        "white_input": w_heur_layer,
+                        "black_input": b_heur_layer}
         return input_tensor
