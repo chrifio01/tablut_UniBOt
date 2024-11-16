@@ -181,13 +181,13 @@ class Client:
             logger.debug(self.current_state)
 
             if self.current_state.turn in (Turn.DRAW, Turn.BLACK_WIN, Turn.WHITE_WIN):
-                logger.debug(f"Game ended...\nResult: {self.current_state.turn.value}")
+                logger.debug("Game ended...\nResult: %s", self.current_state.turn.value)
                 return
 
             if self.current_state.turn.value == self.player.color.value:
                 logger.debug("Calculating move...")
                 action = self._compute_move()
-                logger.debug(f"Sending move:\n{action}")
+                logger.debug("Sending move:\n%s", action)
                 self._send_move(action)
                 logger.debug("Action sent")
             else:

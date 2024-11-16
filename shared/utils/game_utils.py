@@ -63,7 +63,7 @@ def strp_color(color_str: str) -> Color:
 
     if low == 'white':
         return Color.WHITE
-    elif low == 'black':
+    if low == 'black':
         return Color.BLACK
     else:
         raise ValueError(f"Invalid color string: {color_str}")
@@ -109,8 +109,7 @@ def strp_turn(turn_str: str) -> Turn:
         return Turn.BLACK_WIN
     if low == 'draw':
         return Turn.DRAW
-    else:
-        raise ValueError(f"Invalid turn string: {turn_str}")
+    raise ValueError(f"Invalid turn string: {turn_str}")
 
 
 class Action(BaseModel):
@@ -396,7 +395,15 @@ class Board:
         """
         return '\n'.join(''.join(piece.value for piece in row) for row in self.__pieces[::-1])
 
-
 def parse_state_board(state_board: List[List[str]]) -> Board:
+    """
+    Parses a 2D list of piece strings into a Board object.
+
+    Args:
+        state_board (List[List[str]]): A 2D list where each element is a string representing a piece.
+
+    Returns:
+        Board: A Board object initialized with the parsed pieces.
+    """
     pieces = np.array([[_strp_piece(piece_str) for piece_str in row] for row in state_board])
     return Board(pieces)
