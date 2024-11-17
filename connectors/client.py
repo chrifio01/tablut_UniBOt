@@ -95,12 +95,16 @@ class Client:
             logger.debug("Connection established!")
         except socket.timeout:
             logger.error("Connection to %s:%d timed out.", self.server_ip, self.port)
+            raise RuntimeError("Connection to %s:%d timed out.", self.server_ip, self.port)
         except socket.gaierror:
             logger.error("Address-related error connecting to %s:%d.", self.server_ip, self.port)
+            raise RuntimeError("Address-related error connecting to %s:%d.", self.server_ip, self.port)
         except ConnectionRefusedError:
             logger.error("Connection refused by the server at %s:%d.", self.server_ip, self.port)
+            raise RuntimeError("Connection refused by the server at %s:%d.", self.server_ip, self.port)
         except socket.error as e:
             logger.error("Failed to connect to %s:%d due to: %s", self.server_ip, self.port, e)
+            raise RuntimeError("Failed to connect to %s:%d due to: %s", self.server_ip, self.port, e)
 
     def _send_name(self):
         """
@@ -112,6 +116,7 @@ class Client:
             logger.debug("Declared name '%s' to server.", self.player.name)
         except socket.error as e:
             logger.error("Failed to send name to the server: %s", e)
+            raise RuntimeError("Failed to send name to the server: %s", e)
 
     def _send_move(self, action):
         """
@@ -126,6 +131,7 @@ class Client:
             self.socket.send(action_str.encode())
         except socket.error as e:
             logger.error("Failed to send move to the server: %s", e)
+            raise RuntimeError("Failed to send move to the server: %s", e)
 
     def _compute_move(self) -> Action:
         """
