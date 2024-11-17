@@ -93,30 +93,29 @@ class Client:
             self.socket.settimeout(self.timeout)
             self.socket.connect((self.server_ip, self.port))
             logger.debug("Connection established!")
-        except socket.timeout:
-            logger.error("Connection to %s:%d timed out.", self.server_ip, self.port)
-            raise RuntimeError("Connection to %s:%d timed out.", self.server_ip, self.port)
-        except socket.gaierror:
-            logger.error("Address-related error connecting to %s:%d.", self.server_ip, self.port)
-            raise RuntimeError("Address-related error connecting to %s:%d.", self.server_ip, self.port)
-        except ConnectionRefusedError:
-            logger.error("Connection refused by the server at %s:%d.", self.server_ip, self.port)
-            raise RuntimeError("Connection refused by the server at %s:%d.", self.server_ip, self.port)
-        except socket.error as e:
-            logger.error("Failed to connect to %s:%d due to: %s", self.server_ip, self.port, e)
-            raise RuntimeError("Failed to connect to %s:%d due to: %s", self.server_ip, self.port, e)
+        except socket.timeout as exc:
+            logger.error(f"Connection to {self.server_ip}:{self.port} timed out.")
+            raise RuntimeError(f"Connection to {self.server_ip}:{self.port} timed out.") from exc
+        except socket.gaierror as exc:
+            logger.error(f"Address-related error connecting to {self.server_ip}:{self.port}.")
+            raise RuntimeError(f"Address-related error connecting to {self.server_ip}:{self.port}.") from exc
+        except ConnectionRefusedError as exc:
+            logger.error(f"Connection refused by the server at {self.server_ip}:{self.port}.")
+            raise RuntimeError(f"Connection refused by the server at {self.server_ip}:{self.port}.") from exc
+        except socket.error as exc:
+            logger.error(f"Failed to connect to {self.server_ip}:{self.port} due to: {exc}")
+            raise RuntimeError(f"Failed to connect to {self.server_ip}:{self.port} due to: {exc}") from exc
 
     def _send_name(self):
-        """
-        Sends the player's name to the server.
-        """
+        """Sends the player's name to the server."""
         try:
-            self.socket.send(struct.pack('>i', len(self.player.name)))
-            self.socket.send(self.player.name.encode())
-            logger.debug("Declared name '%s' to server.", self.player.name)
-        except socket.error as e:
-            logger.error("Failed to send name to the server: %s", e)
-            raise RuntimeError("Failed to send name to the server: %s", e)
+            name_bytes = self.player.name.encode()
+            self.socket.send(struct.pack('>i', len(name_bytes)))
+            self.socket.send(name_bytes)
+            logger.debug(f"Declared name '{self.player.name}' to server.")
+        except socket.error as exc:
+            logger.error(f"Failed to send name to the server: {exc}")
+            raise RuntimeError(f"Failed to send name to the server: {exc}") from exc
 
     def _send_move(self, action):
         """
@@ -129,17 +128,12 @@ class Client:
             action_str = str(action)
             self.socket.send(struct.pack('>i', len(action_str)))
             self.socket.send(action_str.encode())
-        except socket.error as e:
-            logger.error("Failed to send move to the server: %s", e)
-            raise RuntimeError("Failed to send move to the server: %s", e)
+        except socket.error as exc:
+            logger.error(f"Failed to send move to the server: {exc}")
+            raise RuntimeError(f"Failed to send move to the server: {exc}") from exc
 
     def _compute_move(self) -> Action:
-        """
-        Computes the player's move.
-
-        Returns:
-            Action: The player's computed move.
-        """
+        """Computes the player's move and returns it."""
         return self.player.fit(self.current_state)
 
     def _read_state(self):
@@ -151,11 +145,13 @@ class Client:
         """
         try:
             len_bytes = struct.unpack('>i', self._recvall(4))[0]
-            current_state_server_bytes = self.socket.recv(len_bytes)
-            self.current_state = json.loads(current_state_server_bytes, object_hook=state_decoder)
-        except (socket.error, json.JSONDecodeError) as e:
-            logger.error("Failed to read or decode the server response: %s", e)
-            raise RuntimeError('Failed to decode server response') from e
+            state_data = self._recvall(len_bytes)
+            if state_data is None:
+                raise RuntimeError("Failed to receive game state data.")
+            self.current_state = json.loads(state_data, object_hook=state_decoder)
+        except (socket.error, json.JSONDecodeError) as exc:
+            logger.error(f"Failed to read or decode the server response: {exc}")
+            raise RuntimeError("Failed to decode server response.") from exc
 
     def _recvall(self, n: int) -> bytes:
         """
