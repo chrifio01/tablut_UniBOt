@@ -121,19 +121,19 @@ def king_surrounded(board: Board):
     c = 0
     blocked_pos = []
 
-    if board.get_piece()[king[0]+1][king[1]] == Piece.ATTACKER:
+    if board.get_piece([king[0]+1][king[1]]) == Piece.ATTACKER:
         c += 1
         blocked_pos.append((king[0]+1, king[1]))
 
-    if board.get_piece()[king[0]-1][king[1]] == Piece.ATTACKER:
+    if board.get_piece([king[0]-1][king[1]]) == Piece.ATTACKER:
         c += 1
         blocked_pos.append((king[0]-1, king[1]))
 
-    if board.get_piece()[king[0]][king[1]+1] == Piece.ATTACKER:
+    if board.get_piece([king[0]][king[1]+1]) == Piece.ATTACKER:
         c += 1
         blocked_pos.append((king[0], king[1]+1))
 
-    if board.get_piece()[king[0]][king[1]-1] == Piece.ATTACKER:
+    if board.get_piece([king[0]][king[1]-1]) == Piece.ATTACKER:
         c += 1
         blocked_pos.append((king[0], king[1]-1))
 
@@ -226,10 +226,10 @@ class FeaturizeState:
                 piece = piece_parser(Piece(board_str.get_piece(position)))
                 position_layer[piece][i, j] = True
         
-        turn_layer = np.array([1 if Color(state.turn) == 'W' else 0], dtype=bool)
+        turn_layer = np.array([1 if Turn(state.turn) == 'W' else 0], dtype=bool)
 
-        w_heur_layer = np.array([board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str,board_str.king_pos()), position_weight(board_str.king_pos())])
-        #king_surrounded(board_str)[0],
+        w_heur_layer = np.array([board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str,board_str.king_pos()), king_surrounded(board_str)[0], position_weight(board_str.king_pos())])
+        
         b_heur_layer = np.array([board_str.num_black(), board_str.num_white(), pawns_around(board_str, board_str.king_pos(), 1)])
 
         input_tensor = {"board_input": position_layer,
