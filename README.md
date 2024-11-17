@@ -12,8 +12,8 @@ This Tablut DQN model was developed by @chrifio01 @alessandrocapialbi @mpreda01 
 Clone the repository and navigate to the project root directory.
 
 ```sh
-git clone <your-repo-url>
-cd <your-repo-directory>
+git clone git@github.com:chrifio01/tablut_UniBOt.git
+cd tablut_UniBOt
 ```
 
 # Build and Run in Development
@@ -21,7 +21,7 @@ cd <your-repo-directory>
 Use Docker Compose to set up and run the bot in development mode. The bot requires environment variables to be passed when starting the Docker container, including:
 
 ```plaintext
-    PLAYER_COLOR: Set to WHITE or BLACK (case-insensitive).
+    PLAYER_COLOR and OPPONENT_COLOR: Set to WHITE or BLACK (case-insensitive).
     TIMEOUT: Set to a positive integer (e.g., 60).
     SERVER_IP: Set to the IP address of the server.
 ```
@@ -39,19 +39,12 @@ docker compose -f docker/docker-compose.dev.yaml build
 Once the image is built, you can start the bot using Docker Compose and passing in the required environment variables:
 
 ```sh
-PLAYER_COLOR=WHITE TIMEOUT=60 docker compose -f docker/docker-compose.dev.yaml up client
-```
-
-# Run both Tablut server and Model in Development
-
-Once the image is built, you can start the bot using Docker Compose and passing in the required environment variables:
-
-```sh
-PLAYER_COLOR=WHITE TIMEOUT=60 docker compose -f docker/docker-compose.dev.yaml up
+PLAYER_COLOR=WHITE OPPONENT_COLOR=BLACK TIMEOUT=60 docker compose -f docker/docker-compose.dev.yaml up
 ```
 
 ## Explanation of Environment Variables
 
-    PLAYER_COLOR: Specifies the bot’s role as either the "WHITE" or "BLACK" player.
+    PLAYER_COLOR: Specifies the bot’s role as either the "WHITE" or "BLACK" for our player.
+    OPPONENT_COLOR: Specifies the bot’s role as either the "WHITE" or "BLACK" for the opponent.
     TIMEOUT: Specifies the timeout (in seconds) for the bot’s operations.
     SERVER_IP: Sets the server IP address for communication.
