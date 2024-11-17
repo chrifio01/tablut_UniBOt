@@ -17,7 +17,6 @@ Usage:
     The `LOGGING_CONFIG` should define the handlers, formatters, and log levels for this logger.
 """
 
-import logging
 import logging.config
 from .consts import LOGGING_CONFIG
 
