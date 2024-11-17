@@ -43,5 +43,8 @@ else
   export WEBSOCKET_PORT=5801
 fi
 
+echo "Starting client..."
+sleep 2
+
 # Run the main.py script with the configured environment variables
 python main.py
