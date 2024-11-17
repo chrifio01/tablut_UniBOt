@@ -16,9 +16,9 @@ Usage Example:
         state_str = "OOOBBBOOO\nOOOOBOOOO\n... - WHITE"
         state = strp_state(state_str)
 """
-import numpy as np
 from math import sqrt
 from typing import Annotated
+import numpy as np
 from pydantic import BaseModel, ConfigDict
 from shared.consts import WEIGHTS
 from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn
