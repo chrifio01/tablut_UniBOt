@@ -25,7 +25,23 @@ services:
     ports:
       - "5802:5800"  # white port
       - "5803:5801" # black port
-    entrypoint: ./runmyplayer.sh $PLAYER_COLOR $TIMEOUT $SERVER_IP
+    entrypoint: ./runmyplayer.sh $PLAYER_COLOR1 $TIMEOUT $SERVER_IP
+    networks:
+      - tablut_network
+
+  opponent:
+    user: root
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.client
+    image: rl-client
+    container_name: tablut_opponent
+    depends_on:
+      - server  # Ensure server starts before client
+    ports:
+      - "5804:5800"  # white port
+      - "5805:5801" # black port
+    entrypoint: ./runmyplayer.sh $PLAYER_COLOR2 $TIMEOUT $SERVER_IP
     networks:
       - tablut_network
 
