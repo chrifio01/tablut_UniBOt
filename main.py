@@ -26,5 +26,5 @@ if __name__ == '__main__':
     
         client.main()
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
+        logger.error("An error occurred: %s", e)
         
