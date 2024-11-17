@@ -16,12 +16,12 @@ Usage Example:
         state_str = "OOOBBBOOO\nOOOOBOOOO\n... - WHITE"
         state = strp_state(state_str)
 """
+import numpy as np
 from math import sqrt
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict
 from shared.consts import WEIGHTS
-from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn, Color
-import numpy as np
+from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn
 
 __all__ = ['State', 'strp_state', 'state_decoder']
 
@@ -193,6 +193,12 @@ def piece_parser(piece: Piece) -> int:
     return state_pieces[piece]
 
 class FeaturizeState:
+    """
+    Class representing the state given as input to the DQN.
+
+    Methods:
+        generate_input(): Generates the tensor input of the DQN from the position of the pieces, the turn and the points given from the black and white heuristics
+    """
     def __init__(self, state_string: str):
         """
         Initialize the State Featurizer class with the string representing the board
@@ -225,7 +231,6 @@ class FeaturizeState:
         
         for i in range(board_str.height):
             for j in range(board_str.width):
-                index = i * 9 + j
                 position = (i,j)  
                 piece = piece_parser(Piece(board_str.get_piece(position)))
                 position_layer[piece][i, j] = True
