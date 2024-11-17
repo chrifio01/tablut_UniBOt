@@ -16,7 +16,7 @@ Usage Example:
         state_str = "OOOBBBOOO\nOOOOBOOOO\n... - WHITE"
         state = strp_state(state_str)
 """
-
+from math import sqrt
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict
 from shared.consts import WEIGHTS
@@ -104,8 +104,7 @@ def king_distance_from_center(board: Board, king: tuple [int, int]):
     a Board object
     The king coordinates as a tuple
     """
-
-    return ((king[0] - (board.width//2 + 1))**2 + (king[1] - (board.height//2 + 1))**2)**0.5
+    return sqrt((king[0] - (board.height//2 ))**2 + (king[1] - (board.width//2 ))**2)
 
 
 def king_surrounded(board: Board):
@@ -120,22 +119,27 @@ def king_surrounded(board: Board):
     c = 0
     blocked_pos = []
 
-    if board.get_piece()[king[0]+1][king[1]] == Piece.ATTACKER:
+    if king[0]+1 >= board.height:
+        c += 1
+    elif board.get_piece((king[0]+1, king[1])) == Piece.ATTACKER:
         c += 1
         blocked_pos.append((king[0]+1, king[1]))
-
-    if board.get_piece()[king[0]-1][king[1]] == Piece.ATTACKER:
+    if king[0]-1 < 0:
+        c += 1
+    elif board.get_piece((king[0]-1, king[1])) == Piece.ATTACKER:
         c += 1
         blocked_pos.append((king[0]-1, king[1]))
-
-    if board.get_piece()[king[0]][king[1]+1] == Piece.ATTACKER:
+    if king[1]+1 >= board.width:
+        c += 1
+    elif board.get_piece((king[0], king[1]+1)) == Piece.ATTACKER:
         c += 1
         blocked_pos.append((king[0], king[1]+1))
-
-    if board.get_piece()[king[0]][king[1]-1] == Piece.ATTACKER:
+    if king[1]-1 < 0:
+        c += 1
+    elif board.get_piece((king[0], king[1]-1)) == Piece.ATTACKER:
         c += 1
         blocked_pos.append((king[0], king[1]-1))
-
+  
     return c, blocked_pos
 
 
