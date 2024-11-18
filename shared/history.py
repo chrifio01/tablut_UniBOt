@@ -70,7 +70,7 @@ class History(BaseModel):
     """
     matches: Annotated[Dict[int, Match], "A dictionary mapping match IDs to Match objects"]
 
-    def update_history(self, match_id: int, state: State, action: Action, reward: float):
+    def update_history(self, match_id: int, white_player: AbstractPlayer, black_player: AbstractPlayer, state: State, action: Action, reward: float):
         """
         Updates the history with a new match, adding the match ID, state, action, and reward.
 
@@ -79,12 +79,14 @@ class History(BaseModel):
             state (State): The current state of the game.
             action (Action): The action taken by the player.
             reward (float): The reward received for the action.
+            white_player (AbstractPlayer): The player playing as white.
+            black_player (AbstractPlayer): The player playing as black.
         """
         if match_id not in self.matches:
             self.matches[match_id] = Match(
                 match_id=match_id,
-                white_player=RandomPlayer(color=Color.WHITE),
-                black_player=RandomPlayer(color=Color.BLACK),
+                white_player=white_player,
+                black_player=black_player,
                 turns=[],
                 outcome=None
             )
