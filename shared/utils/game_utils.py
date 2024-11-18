@@ -170,6 +170,7 @@ class Piece(Enum):
     KING = 'K'
     THRONE = 'T'
     EMPTY = 'O'
+    CAMPS = 'C'
 
 
 def _strp_piece(piece_str: str) -> Piece:

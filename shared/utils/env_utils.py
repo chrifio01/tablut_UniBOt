@@ -18,8 +18,9 @@ Usage Example:
 """
 from math import sqrt
 from typing import Annotated
+import numpy as np
 from pydantic import BaseModel, ConfigDict
-from shared.consts import WEIGHTS
+from shared.consts import WEIGHTS, CAMPS
 from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn
 
 __all__ = ['State', 'strp_state', 'state_decoder']
@@ -171,3 +172,62 @@ def pawns_around(board: Board, pawn: tuple, distance: int):
             if (x+i, y+j) in board.get_black_coordinates():
                 count += 1
     return count
+
+def piece_parser(piece: Piece) -> int:
+    """
+    Return the index of the boolean array (which represents the board) used as a input for the policy network of the DQN
+
+    Arg:
+    Piece object
+
+    Example:
+    If the piece given is the KING, the function will return 1
+    The second array given as input will be the one displaying the position of the KING in the 9x9 board (index 1 means second element)
+    """
+    state_pieces = {Piece.DEFENDER : 0,
+                    Piece.KING : 1,
+                    Piece.ATTACKER : 2,
+                    Piece.CAMPS : 3,
+                    Piece.THRONE : 3}
+    return state_pieces[piece]
+
+class StateFeaturizer:
+    """
+    Class representing the state given as input to the DQN.
+
+    Methods:
+        generate_input(): Generates the tensor input of the DQN from the position of the pieces, the turn and the points given from the black and white heuristics
+    """
+    @staticmethod
+    def generate_input(state_string: State):
+        """
+        Return the tensor representing the state which the DQN should receive as input to choose best action
+
+        """
+        position_layer = [np.zeros((9, 9), dtype=bool) for _ in range(4)]
+        for x,y in CAMPS:
+            position_layer[piece_parser(Piece.CAMPS)][x,y] = 1
+        position_layer[piece_parser(Piece.CAMPS)][4,4] = 1 
+        
+        board_str = state_string.board
+        
+        for i in range(board_str.height):
+            for j in range(board_str.width):
+                try:
+                    position = (i,j)  
+                    piece = piece_parser(Piece(board_str.get_piece(position)))
+                    position_layer[piece][-i-1, j] = True
+                except KeyError:
+                    pass
+        
+        turn_layer = np.array([1 if state_string.turn == 'W' else 0], dtype=bool)
+
+        w_heur_layer = np.array([board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str,board_str.king_pos()), king_surrounded(board_str)[0], position_weight(board_str.king_pos())])
+        
+        b_heur_layer = np.array([board_str.num_black(), board_str.num_white(), pawns_around(board_str, board_str.king_pos(), 1)])
+
+        input_tensor = {"board_input": position_layer,
+                        "turn_input": turn_layer, 
+                        "white_input": w_heur_layer,
+                        "black_input": b_heur_layer}
+        return input_tensor
