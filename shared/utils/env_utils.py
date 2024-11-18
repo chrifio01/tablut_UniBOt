@@ -199,6 +199,7 @@ class StateFeaturizer:
     Methods:
         generate_input(): Generates the tensor input of the DQN from the position of the pieces, the turn and the points given from the black and white heuristics
     """
+    @staticmethod
     def generate_input(state_string: State):
         """
         Return the tensor representing the state which the DQN should receive as input to choose best action
