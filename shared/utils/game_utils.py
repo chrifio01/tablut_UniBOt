@@ -37,10 +37,10 @@ Usage Example:
 """
 
 from enum import Enum
+from pydantic import BaseModel
 from typing import Annotated, Tuple, List
 import json
 import string
-from pydantic import BaseModel
 import numpy as np
 
 __all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square', 'strp_turn', 'Turn',
@@ -284,6 +284,49 @@ def _check_single_king_and_throne(pieces: np.ndarray) -> bool:
     return True
 
 
+class Match(BaseModel):
+    """
+    Model representing a match in the Tablut game.
+
+    Attributes:
+        match_id (int): The unique identifier for the match.
+        white_player (AbstractPlayer): The player playing as white.
+        black_player (AbstractPlayer): The player playing as black.
+        turns (List[Turn]): The list of turns taken during the match.
+        states (List[State]): The list of states during the match.
+        actions (List[Action]): The list of actions taken during the match.
+        outcome (Turn): The outcome of the match.
+    """
+    from shared.utils import AbstractPlayer, State
+    match_id: int
+    white_player: AbstractPlayer
+    black_player: AbstractPlayer
+    turns: List[Turn]
+    states: List[State]
+    actions: List[Action]
+    outcome: Turn
+
+    def __str__(self) -> str:
+        """
+        Returns a JSON-formatted string representing the match.
+
+        Returns:
+            str: JSON string with match details.
+        """
+        return json.dumps(
+            {
+                "match_id": self.match_id,
+                "white_player": str(self.white_player),
+                "black_player": str(self.black_player),
+                "turns": [turn.value for turn in self.turns],
+                "states": [str(state) for state in self.states],
+                "actions": [str(action) for action in self.actions],
+                "outcome": self.outcome.value
+            },
+            indent=4
+        )
+
+
 class Board:
     """
     Singleton class representing the game board in Tablut.
@@ -416,7 +459,6 @@ class Board:
 
         return (king_position[0][0], king_position[1][0])
 
-
     def num_white(self):
         """
         Return the number of white pawns on the board
@@ -459,10 +501,11 @@ class Board:
         """
         Function that return a list of all the coordinates for the black pawns on the board at the moment
         """
-        return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if self.__pieces[i, j] == Piece.ATTACKER]
+        return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if
+                self.__pieces[i, j] == Piece.ATTACKER]
 
 
-def parse_state_board(state_board: List[List[str]]) -> Board :
+def parse_state_board(state_board: List[List[str]]) -> Board:
     """
     Parses a 2D list of piece strings into a Board object.
 
