@@ -38,9 +38,9 @@ Usage Example:
 
 from enum import Enum
 import string
-from pydantic import BaseModel
-from typing import Annotated, Tuple, List
 import json
+from typing import Annotated, Tuple, List
+from pydantic import BaseModel
 import numpy as np
 
 __all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square', 'strp_turn', 'Turn',
