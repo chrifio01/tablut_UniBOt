@@ -22,8 +22,7 @@ Methods:
 
 from typing import List, Tuple, Annotated, Optional, Dict
 from pydantic import BaseModel
-from shared.random_player import RandomPlayer
-from shared.utils import AbstractPlayer, Action, State, Turn, Color
+from shared.utils import AbstractPlayer, Action, State, Turn
 
 class Match(BaseModel):
     """
