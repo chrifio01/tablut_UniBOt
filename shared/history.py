@@ -55,8 +55,8 @@ class Match(BaseModel):
         )
         return (
             f"Match ID: {self.match_id}\n"
-            f"White Player: {self.white_player}\n"
-            f"Black Player: {self.black_player}\n"
+            f"White Player: {self.white_player.name}\n"
+            f"Black Player: {self.black_player.name}\n"
             f"Turns:\n{turns_str}\n"
             f"Outcome: {self.outcome}"
         )
