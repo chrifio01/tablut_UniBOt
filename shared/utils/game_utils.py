@@ -37,10 +37,10 @@ Usage Example:
 """
 
 from enum import Enum
+import string
 from pydantic import BaseModel
 from typing import Annotated, Tuple, List
 import json
-import string
 import numpy as np
 
 __all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square', 'strp_turn', 'Turn',
@@ -282,94 +282,6 @@ def _check_single_king_and_throne(pieces: np.ndarray) -> bool:
         raise ValueError("Invalid board: the THRONE is not in the center")
 
     return True
-
-
-class Match(BaseModel):
-    """
-    Model representing a match in the Tablut game.
-
-    Attributes:
-        match_id (int): The unique identifier for the match.
-        white_player (AbstractPlayer): The player playing as white.
-        black_player (AbstractPlayer): The player playing as black.
-        turns (List[Turn]): The list of turns taken during the match.
-        states (List[State]): The list of states during the match.
-        actions (List[Action]): The list of actions taken during the match.
-        outcome (Turn): The outcome of the match.
-    """
-    from shared.utils import AbstractPlayer, State
-    match_id: int
-    white_player: AbstractPlayer
-    black_player: AbstractPlayer
-    turns: List[Turn]
-    states: List[State]
-    actions: List[Action]
-    outcome: Turn
-
-    def __str__(self) -> str:
-        """
-        Returns a JSON-formatted string representing the match.
-
-        Returns:
-            str: JSON string with match details.
-        """
-        return json.dumps(
-            {
-                "match_id": self.match_id,
-                "white_player": str(self.white_player),
-                "black_player": str(self.black_player),
-                "turns": [turn.value for turn in self.turns],
-                "states": [str(state) for state in self.states],
-                "actions": [str(action) for action in self.actions],
-                "outcome": self.outcome.value
-            },
-            indent=4
-        )
-
-class History:
-    """
-    Class representing the history of matches played.
-
-    Attributes:
-        matches (dict[int, Match]): A dictionary mapping match IDs to Match objects.
-    """
-    from shared.utils import State
-    def __init__(self):
-        """
-        Initializes a new History object with an empty dictionary of matches.
-        """
-        self.matches = {}
-
-    def update_history(self, match_id: int, state: State, action: Action, reward: float):
-        """
-        Updates the history with a new match, adding the match ID, state, action, and reward.
-
-        Args:
-            match_id (int): The unique identifier for the match.
-            state (State): The current state of the game.
-            action (Action): The action taken by the player.
-            reward (float): The reward received for the action.
-
-        Raises:
-            ValueError: If the match does not exist.
-        """
-        if match_id not in self.matches:
-            raise ValueError(f"Match with ID {match_id} does not exist.")
-        self.matches[match_id].turns.append(action.turn)
-        self.matches[match_id].states.append(state)
-        self.matches[match_id].actions.append(action)
-
-    def dump(self) -> str:
-        """
-        Dumps the history of matches to a JSON string.
-
-        Returns:
-            str: A JSON string representing the history of matches.
-        """
-        return json.dumps(
-            {match_id: match.__str__() for match_id, match in self.matches.items()},
-            indent=4
-        )
 
 
 class Board:
