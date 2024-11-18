@@ -37,9 +37,9 @@ Usage Example:
 """
 
 from enum import Enum
-from typing import Annotated, Tuple, List
-import json
 import string
+import json
+from typing import Annotated, Tuple, List
 from pydantic import BaseModel
 import numpy as np
 
@@ -417,7 +417,6 @@ class Board:
 
         return (king_position[0][0], king_position[1][0])
 
-
     def num_white(self):
         """
         Return the number of white pawns on the board
@@ -460,10 +459,11 @@ class Board:
         """
         Function that return a list of all the coordinates for the black pawns on the board at the moment
         """
-        return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if self.__pieces[i, j] == Piece.ATTACKER]
+        return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if
+                self.__pieces[i, j] == Piece.ATTACKER]
 
 
-def parse_state_board(state_board: List[List[str]]) -> Board :
+def parse_state_board(state_board: List[List[str]]) -> Board:
     """
     Parses a 2D list of piece strings into a Board object.
 
