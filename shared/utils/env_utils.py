@@ -209,18 +209,18 @@ class StateFeaturizer:
             position_layer[piece_parser(Piece.CAMPS)][x,y] = 1
         position_layer[piece_parser(Piece.CAMPS)][4,4] = 1 
         
-        board_str = Board(state_string.board.pieces)
+        board_str = state_string.board
         
         for i in range(board_str.height):
             for j in range(board_str.width):
                 try:
                     position = (i,j)  
                     piece = piece_parser(Piece(board_str.get_piece(position)))
-                    position_layer[piece][i, j] = True
+                    position_layer[piece][-i-1, j] = True
                 except KeyError:
                     pass
         
-        turn_layer = np.array([1 if Turn(state_string.turn) == 'W' else 0], dtype=bool)
+        turn_layer = np.array([1 if state_string.turn == 'W' else 0], dtype=bool)
 
         w_heur_layer = np.array([board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str,board_str.king_pos()), king_surrounded(board_str)[0], position_weight(board_str.king_pos())])
         
