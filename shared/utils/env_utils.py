@@ -187,9 +187,8 @@ def piece_parser(piece: Piece) -> int:
     state_pieces = {Piece.DEFENDER : 0,
                     Piece.KING : 1,
                     Piece.ATTACKER : 2,
-                    Piece.EMPTY : 3,
-                    Piece.CAMPS : 4,
-                    Piece.THRONE : 4}
+                    Piece.CAMPS : 3,
+                    Piece.THRONE : 3}
     return state_pieces[piece]
 
 class StateFeaturizer:
@@ -205,7 +204,7 @@ class StateFeaturizer:
         Return the tensor representing the state which the DQN should receive as input to choose best action
 
         """
-        position_layer = [np.zeros((9, 9), dtype=bool) for _ in range(5)]
+        position_layer = [np.zeros((9, 9), dtype=bool) for _ in range(4)]
         for x,y in CAMPS:
             position_layer[piece_parser(Piece.CAMPS)][x,y] = 1
         position_layer[piece_parser(Piece.CAMPS)][4,4] = 1 
@@ -214,9 +213,12 @@ class StateFeaturizer:
         
         for i in range(board_str.height):
             for j in range(board_str.width):
-                position = (i,j)  
-                piece = piece_parser(Piece(board_str.get_piece(position)))
-                position_layer[piece][i, j] = True
+                try:
+                    position = (i,j)  
+                    piece = piece_parser(Piece(board_str.get_piece(position)))
+                    position_layer[piece][i, j] = True
+                except KeyError:
+                    pass
         
         turn_layer = np.array([1 if Turn(state_string.turn) == 'W' else 0], dtype=bool)
 
