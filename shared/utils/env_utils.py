@@ -20,7 +20,7 @@ from math import sqrt
 from typing import Annotated
 import numpy as np
 from pydantic import BaseModel, ConfigDict
-from shared.consts import WEIGHTS
+from shared.consts import WEIGHTS, CAMPS
 from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn
 
 __all__ = ['State', 'strp_state', 'state_decoder']
@@ -192,42 +192,24 @@ def piece_parser(piece: Piece) -> int:
                     Piece.THRONE : 4}
     return state_pieces[piece]
 
-class FeaturizeState:
+class StateFeaturizer:
     """
     Class representing the state given as input to the DQN.
 
     Methods:
         generate_input(): Generates the tensor input of the DQN from the position of the pieces, the turn and the points given from the black and white heuristics
     """
-    def __init__(self, state_string: str):
-        """
-        Initialize the State Featurizer class with the string representing the board
-        This string is used to generate the tensor input for the DQN
-        
-        Arg:
-        state_string, the string representing the board
-        """
-        self.state_string = state_string
-
-    def generate_input(self):
+    def generate_input(state_string: State):
         """
         Return the tensor representing the state which the DQN should receive as input to choose best action
 
         """
         position_layer = [np.zeros((9, 9), dtype=bool) for _ in range(5)]
-        position_layer[piece_parser(Piece.CAMPS)] = np.array([
-                                                            [0, 0, 0, 1, 1, 1, 0, 0, 0],
-                                                            [0, 0, 0, 0, 1, 0, 0, 0, 0],
-                                                            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                                            [1, 0, 0, 0, 0, 0, 0, 0, 1],
-                                                            [1, 1, 0, 0, 1, 0, 0, 1, 1],  
-                                                            [1, 0, 0, 0, 0, 0, 0, 0, 1],  
-                                                            [0, 0, 0, 0, 0, 0, 0, 0, 0],  
-                                                            [0, 0, 0, 0, 1, 0, 0, 0, 0],  
-                                                            [0, 0, 0, 1, 1, 1, 0, 0, 0]   
-                                                            ], dtype=bool)
-        state = strp_state(self.state_string)
-        board_str = Board(state.board.pieces)
+        for x,y in CAMPS:
+            position_layer[piece_parser(Piece.CAMPS)][x,y] = 1
+        position_layer[piece_parser(Piece.CAMPS)][4,4] = 1 
+        
+        board_str = Board(state_string.board.pieces)
         
         for i in range(board_str.height):
             for j in range(board_str.width):
@@ -235,7 +217,7 @@ class FeaturizeState:
                 piece = piece_parser(Piece(board_str.get_piece(position)))
                 position_layer[piece][i, j] = True
         
-        turn_layer = np.array([1 if Turn(state.turn) == 'W' else 0], dtype=bool)
+        turn_layer = np.array([1 if Turn(state_string.turn) == 'W' else 0], dtype=bool)
 
         w_heur_layer = np.array([board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str,board_str.king_pos()), king_surrounded(board_str)[0], position_weight(board_str.king_pos())])
         
