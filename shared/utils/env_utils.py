@@ -231,3 +231,25 @@ class StateFeaturizer:
                         "white_input": w_heur_layer,
                         "black_input": b_heur_layer}
         return input_tensor
+
+def black_win_con(board: Board, king: tuple [int, int]):
+    """
+    Black player win condition is satisfied when the value of this function is 4, the king is surrounded on every side
+
+    Arg:
+    Board object
+    The king postition as a tuple of int
+
+    Return: 
+    The number of blocked sides of the king 
+    """
+    x, y = king
+    count = 0
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if i == 0 and j == 0:
+                continue
+            if (x+i, y+j) in board.get_black_coordinates() or board.get_piece((x+i, y+j)) == Piece.THRONE or board.get_piece((x+i, y+j)) == Piece.CAMPS:
+                count += 1
+    return count
+    

@@ -1,6 +1,6 @@
 
-from shared.utils.game_utils import Board, Action
-from shared.utils.env_utils import State, pawns_around
+from shared.utils.game_utils import Board, Action, Turn
+from shared.utils.env_utils import State, black_win_con
 from shared.history import History
 from pydantic import BaseModel
 from typing import List, Tuple, Annotated, Optional, Dict
@@ -18,7 +18,7 @@ class Environment(BaseModel):
         pass
 
     def did_black_WIN(self)->bool:
-        if pawns_around(self.board, self.board.king_pos, 1) == 4:
+        if black_win_con(self.board, self.board.king_pos()) == 4:
             return True
         return False
         
@@ -30,9 +30,9 @@ class Environment(BaseModel):
     
     def get_winnner(self):
         if self.did_black_WIN():
-            return "BW"
+            return Turn.BLACK_WIN
         if self.did_white_WIN():
-            return "WW"
+            return Turn.WHITE_WIN
         return None
     
     def calculate_rewards(self, move: Action):
@@ -41,5 +41,8 @@ class Environment(BaseModel):
     def update_state(self, move: Action):
         self.board.update_pieces(move)
         pass
+
+   
+
         
 
