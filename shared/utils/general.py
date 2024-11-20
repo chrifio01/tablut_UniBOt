@@ -27,5 +27,5 @@ def parse_yaml(filename: str) -> dict:
         FileNotFoundError: If the specified file does not exist.
         yaml.YAMLError: If there is an error parsing the YAML file.
     """
-    with open(filename, 'r') as file:
+    with open(filename, 'r', encoding="utf-8") as file:
         return yaml.safe_load(file)

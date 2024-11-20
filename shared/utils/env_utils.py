@@ -38,6 +38,9 @@ class State(BaseModel):
     turn: Turn
     
     class Config:
+        """
+            Allow arbitrary types for the model. This allows for more flexibility in parsing JSON objects.
+        """
         arbitrary_types_allowed = True
     
     def __str__(self):
