@@ -17,7 +17,6 @@ class Environment:
         self.currentState = current_state
         self.history = history
 
-
     def is_it_a_tie(self, match_id: int) -> bool:
 
         turns = self.history.matches[match_id].turns
@@ -70,8 +69,6 @@ class Environment:
             return heuristic(self.currentState, last_action)
         else:
             raise ValueError("Current state does not match the last state in history.")
-
-
 
     def update_state(self, move: Action):
         self.board.update_pieces(move)
