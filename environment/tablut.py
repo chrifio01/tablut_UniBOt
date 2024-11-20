@@ -13,11 +13,11 @@ from shared.heuristic import heuristic
 class Environment(BaseModel):
 
     board: Annotated[Board, "A class Board object"]
-    currentState: Annotated[State, "The current config of the board piecese, and player turn"]
+    currentState: Annotated[State, "The current config of the board pieces, and player turn"]
     historyUpdater: Annotated[History, "Past states and moves"]
 
     def is_it_a_tie(self, match_id: int)->bool:
-        if self.currentState in self.historyUpdater.matches[match_id].turns:
+        if any(self.currentState == tupla[0] for tupla in self.historyUpdater.matches[match_id].turns): 
             return True
         return False
 
@@ -25,7 +25,7 @@ class Environment(BaseModel):
         if black_win_con(self.board, self.board.king_pos()) == 4:
             return True
         if self.currentState.turn == Turn.WHITE_TURN:      
-            if not MoveChecker.is_valid_move(self.currentState, move):
+            if MoveChecker.get_possible_moves(self.currentState) == []:
                 return True
         return False
         
@@ -33,7 +33,7 @@ class Environment(BaseModel):
         if self.board.king_pos() in WIN_TILES:
             return True
         if self.currentState.turn == Turn.BLACK_TURN:      
-            if not MoveChecker.is_valid_move(self.currentState, move):
+            if MoveChecker.get_possible_moves(self.currentState) == []:
                 return True
         return False
     
@@ -45,7 +45,7 @@ class Environment(BaseModel):
         return None
     
     def calculate_rewards(self, match_id: int):
-        return heuristic(self.currentState, self.historyUpdater.matches[match_id].turns[0])
+        return heuristic(self.currentState, self.historyUpdater.matches[match_id].turns[1])
     
     def update_state(self, move: Action):
         self.board.update_pieces(move)
