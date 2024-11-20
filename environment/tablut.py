@@ -14,15 +14,15 @@ class Environment:
     currentState: State
     historyUpdater: History
 
-    def __init__(self, board: Board, currentState: State, historyUpdater: History):
+    def __init__(self, board: Board, current_state: State, history: History):
         self.board = board
-        self.currentState = currentState
-        self.historyUpdater = historyUpdater
+        self.currentState = current_state
+        self.history = history
 
 
     def is_it_a_tie(self, match_id: int) -> bool:
 
-        turns = self.historyUpdater.matches[match_id].turns
+        turns = self.history.matches[match_id].turns
 
         if len(turns) < 4:
             return False
@@ -61,7 +61,7 @@ class Environment:
         return None
 
     def calculate_rewards(self, match_id: int):
-        turns = self.historyUpdater.matches[match_id].turns
+        turns = self.history.matches[match_id].turns
         filtered_turns = list(filter(lambda tupla: tupla[0] == self.currentState, turns))
         if not filtered_turns:
             raise ValueError("Current state not found in turns.")
