@@ -462,6 +462,12 @@ class Board:
         return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if
                 self.__pieces[i, j] == Piece.ATTACKER]
 
+    def reset(self):
+        """
+        Reset the board to the initial state
+        """
+        pass
+
 
 def parse_state_board(state_board: List[List[str]]) -> Board:
     """
