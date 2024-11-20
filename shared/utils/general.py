@@ -8,12 +8,12 @@ Dependencies:
     - yaml (requires PyYAML library)
 
 Functions:
-    - yaml_parser: Parses a YAML file and returns its contents as a dictionary.
+    - parse_yaml: Parses a YAML file and returns its contents as a dictionary.
 """
 
 import yaml
 
-def yaml_parser(filename: str) -> dict:
+def parse_yaml(filename: str) -> dict:
     """
     Parse a YAML file and return its contents as a dictionary.
 
