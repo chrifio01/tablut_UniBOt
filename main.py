@@ -3,10 +3,18 @@
 """
 import os
 from shared.random_player import RandomPlayer
-from shared.utils import strp_color
+from shared.utils import strp_color, parse_yaml
 from shared.consts import INITIAL_STATE
 from shared.loggers import logger
 from connectors.client import Client
+
+_config_file_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "config",
+    "config.yaml"
+)
+
+CONFIG = parse_yaml(_config_file_path)  # env and model configs
 
 if __name__ == '__main__':
     try:
