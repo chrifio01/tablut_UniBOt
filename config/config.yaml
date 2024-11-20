@@ -8,21 +8,14 @@ model:
 
 env:
   observation_spec:
-    dtype: int32                  # Data type of observation
     shape: [1]                    # Shape of observation
   action_spec:
-    dtype: int32                  # Data type of action
     shape: [1]                    # Shape of action
-  reward_spec:
-    dtype: float32                # Data type of reward signal
   max_episode_steps: 1000         # Maximum steps in an episode
   time_step_spec:                 # Time step specifications
     step_type:                    # Step type (e.g., first, mid, last)
-      dtype: int32
       shape: []
     reward:                       # Reward specification
-      dtype: float32
       shape: []
     discount:                     # Discount factor specification
-      dtype: float32
       shape: []
