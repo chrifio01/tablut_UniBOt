@@ -19,7 +19,7 @@ Usage Example:
 from math import sqrt
 from typing import Annotated
 import numpy as np
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from shared.consts import WEIGHTS, CAMPS
 from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn
 
@@ -34,10 +34,14 @@ class State(BaseModel):
         board (Board): The current state of the game board, represented as a 2D array of `Piece` values.
         turn (Color): The player whose turn it currently is, represented as a `Color` enum.
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    board: Board
+    turn: Turn
     
-    board: Annotated[Board, "The current state of the game board"]
-    turn: Annotated[Turn, "The turn player"]
+    class Config:
+        """
+            Allow arbitrary types for the model. This allows for more flexibility in parsing JSON objects.
+        """
+        arbitrary_types_allowed = True
     
     def __str__(self):
         return f"{self.board.__str__()}\n-\n{self.turn.value}"
