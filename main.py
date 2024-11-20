@@ -1,15 +1,19 @@
-"""
-    Entrypoint for the TablutClient.
-"""
 import os
+
+import numpy as np
+
+from environment.tablut import Environment
+from shared.history import History, Match
 from shared.random_player import RandomPlayer
-from shared.utils import strp_color
+from shared.utils import strp_color, strp_state, Color, Action, Turn
 from shared.consts import INITIAL_STATE
 from shared.loggers import logger
 from connectors.client import Client
+from shared.utils.game_utils import Board, strp_board
 
 if __name__ == '__main__':
-    try:
+
+    """try:
         PLAYER_COLOR = os.environ['PLAYER_COLOR']
         TIMEOUT = os.environ['TIMEOUT']
         SERVER_IP = os.environ['SERVER_IP']
@@ -23,19 +27,13 @@ if __name__ == '__main__':
         }
         player = RandomPlayer(color=strp_color(PLAYER_COLOR))
         client = Client(player=player, settings=settings)
-    
+
         client.main()
     except Exception as e:
         logger.error("An error occurred: %s", e)
+    """
 
 
-
-from environment.tablut import Environment
-from shared.history import History, Match
-from shared.utils import AbstractPlayer
-from shared.utils.game_utils import Color, Action, Board
-from shared.heuristic import heuristic
-from shared.utils.env_utils import strp_state
 STATE1 = (
     "OOOBBBOOO\n"
     "OOOOBOOOO\n"
@@ -49,63 +47,52 @@ STATE1 = (
     "-\n"
     "W"
 )
+
 STATE2 = (
     "OOOBBBOOO\n"
     "OOOOBOOOO\n"
-    "OOOOWWOOO\n"
+    "OOOOWOOOO\n"
     "BOOOWOOOB\n"
-    "BBWWKOWBB\n"
+    "BBWWKWWBB\n"
     "BOOOWOOOB\n"
     "OOOOWOOOO\n"
-    "OOOOBOOOO\n"
+    "OOOOOBOOO\n"
     "OOOBBBOOO\n"
     "-\n"
-    "B"
+    "W"
 )
+
 STATE3 = (
     "OOOBBBOOO\n"
     "OOOOBOOOO\n"
-    "OOOOWWOOO\n"
-    "BOOOWOOOB\n"
-    "BBWWKOWBB\n"
-    "BOOOWOOOB\n"
-    "OOOOWOOOO\n"
-    "OOOOOBOOO\n"
-    "OOOBBBOOO\n"
-    "-\n"
-    "W"
-)
-STATE4 = (
-    "OOOBBBOOO\n"
-    "OOOOBOOOO\n"
     "OOOOWOOOO\n"
     "BOOOWOOOB\n"
     "BBWWKWWBB\n"
     "BOOOWOOOB\n"
     "OOOOWOOOO\n"
-    "OOOOOBOOO\n"
-    "OOOBBBOOO\n"
-    "-\n"
-    "B"
-)
-STATE5 = (
-    "OOOBBBOOO\n"
-    "OOOOBOOOO\n"
-    "OOOOWOOOO\n"
-    "BOOOWOOOB\n"
-    "BBWWKWWBB\n"
-    "BOOOWOOOB\n"
-    "OOOOWOOOO\n"
-    "OOOOBOOOO\n"
+    "OOOOOOBOO\n"
     "OOOBBBOOO\n"
     "-\n"
     "W"
 )
-p1 = AbstractPlayer(STATE1, "testw", Color.WHITE)
-p2 = AbstractPlayer(STATE1, "testb", Color.BLACK)
-turns = [(STATE1, Action(from_= "f5", to_="f7", turn=Color.WHITE), heuristic(STATE1,  Action(from_= "f5", to_="f7", turn=Color.WHITE)))]
-turns.append((STATE2, Action(from_= "e2", to_="f2", turn=Color.BLACK), heuristic(STATE1,  Action(from_= "e2", to_="f2", turn=Color.BLACK))))
-turns.append((STATE3, Action(from_= "f7", to_="f5", turn=Color.WHITE), heuristic(STATE1,  Action(from_= "f7", to_="f5", turn=Color.WHITE))))
-turns.append((STATE4, Action(from_= "f2", to_="e2", turn=Color.BLACK), heuristic(STATE1,  Action(from_= "f2", to_="e2", turn=Color.BLACK))))
-his = History(Match(1, p1, p2, turns))
-env = Environment(Board(strp_state(STATE5)), STATE5, his)
+
+
+# Initialize players
+p1 = RandomPlayer(color=Color.WHITE, initial_state=strp_state(STATE1))
+p2 = RandomPlayer(color=Color.BLACK, initial_state=strp_state(STATE1))
+
+# Initialize history with the same state twice
+turns = [
+    (strp_state(STATE1), Action(from_="f5", to_="f7", turn=Turn.WHITE_TURN), 0.0),
+    (strp_state(STATE2), Action(from_="f5", to_="f7", turn=Turn.BLACK_TURN), 0.0),
+    (strp_state(STATE3), Action(from_="f5", to_="f7", turn=Turn.WHITE_TURN), 0.0),
+    (strp_state(STATE1), Action(from_="f5", to_="f7", turn=Turn.BLACK_TURN), 0.0)
+]
+
+# Create history and environment
+his = History(matches={1: Match(match_id=1, white_player=p1, black_player=p2, turns=turns, outcome=None)})
+env = Environment(board=Board(strp_state(STATE1).board.pieces), currentState=strp_state(STATE1), historyUpdater=his)
+
+# Check if it is a tie
+is_tie = env.is_it_a_tie(match_id=1)
+print(f"Is it a tie? {is_tie}")
