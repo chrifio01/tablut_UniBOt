@@ -21,7 +21,7 @@ Methods:
 """
 
 from typing import List, Tuple, Annotated, Optional, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from shared.utils import AbstractPlayer, Action, State, Turn
 
 class Match(BaseModel):
@@ -35,6 +35,8 @@ class Match(BaseModel):
         turns (List[Tuple[State, Action, float]]): The list of turns taken during the match, each containing a state, an action, and a reward.
         outcome (Optional[Turn]): The outcome of the match.
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     match_id: Annotated[int, "The unique identifier for the match"]
     white_player: Annotated[AbstractPlayer, "The player playing as white"]
     black_player: Annotated[AbstractPlayer, "The player playing as black"]

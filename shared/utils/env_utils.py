@@ -20,7 +20,7 @@ from math import sqrt
 from typing import Annotated
 import numpy as np
 from pydantic import BaseModel
-from shared.consts import WEIGHTS, CAMPS
+from shared.consts import WEIGHTS, CAMPS, INITIAL_STATE
 from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn
 
 __all__ = ['State', 'strp_state', 'state_decoder']
@@ -36,15 +36,22 @@ class State(BaseModel):
     """
     board: Board
     turn: Turn
-    
+
     class Config:
         """
             Allow arbitrary types for the model. This allows for more flexibility in parsing JSON objects.
         """
         arbitrary_types_allowed = True
-    
+
     def __str__(self):
         return f"{self.board.__str__()}\n-\n{self.turn.value}"
+
+    def reset(self):
+        """
+        Reset the state to the initial configuration.
+        """
+        pass
+
 
 def state_decoder(obj: dict):
     """
@@ -61,9 +68,10 @@ def state_decoder(obj: dict):
         board = parse_state_board(obj['board'])
         return State(board=board, turn=turn)
     return None
-    
+
+
 def strp_state(
-    state_str: str
+        state_str: str
 ) -> Annotated[State, "The corresponding state from a string representation of the state"]:
     """
     Converts a server-provided string representation of the game state into a `State` object.
@@ -97,11 +105,11 @@ def strp_state(
     except ValueError as e:
         raise ValueError("Invalid state format: could not parse board or turn.") from e
 
+
 ############################################### Definition of the functions for the evaluation of the Fitness in the heuristic ###########################################################################
 
 
-
-def king_distance_from_center(board: Board, king: tuple [int, int]):
+def king_distance_from_center(board: Board, king: tuple[int, int]):
     """
     Calculate de distance of the king from the center
 
@@ -109,7 +117,7 @@ def king_distance_from_center(board: Board, king: tuple [int, int]):
     a Board object
     The king coordinates as a tuple
     """
-    return sqrt((king[0] - (board.height//2 ))**2 + (king[1] - (board.width//2 ))**2)
+    return sqrt((king[0] - (board.height // 2)) ** 2 + (king[1] - (board.width // 2)) ** 2)
 
 
 def king_surrounded(board: Board):
@@ -124,33 +132,31 @@ def king_surrounded(board: Board):
     c = 0
     blocked_pos = []
 
-    if king[0]+1 >= board.height:
+    if king[0] + 1 >= board.height:
         c += 1
-    elif board.get_piece((king[0]+1, king[1])) == Piece.ATTACKER:
+    elif board.get_piece((king[0] + 1, king[1])) == Piece.ATTACKER:
         c += 1
-        blocked_pos.append((king[0]+1, king[1]))
-    if king[0]-1 < 0:
+        blocked_pos.append((king[0] + 1, king[1]))
+    if king[0] - 1 < 0:
         c += 1
-    elif board.get_piece((king[0]-1, king[1])) == Piece.ATTACKER:
+    elif board.get_piece((king[0] - 1, king[1])) == Piece.ATTACKER:
         c += 1
-        blocked_pos.append((king[0]-1, king[1]))
-    if king[1]+1 >= board.width:
+        blocked_pos.append((king[0] - 1, king[1]))
+    if king[1] + 1 >= board.width:
         c += 1
-    elif board.get_piece((king[0], king[1]+1)) == Piece.ATTACKER:
+    elif board.get_piece((king[0], king[1] + 1)) == Piece.ATTACKER:
         c += 1
-        blocked_pos.append((king[0], king[1]+1))
-    if king[1]-1 < 0:
+        blocked_pos.append((king[0], king[1] + 1))
+    if king[1] - 1 < 0:
         c += 1
-    elif board.get_piece((king[0], king[1]-1)) == Piece.ATTACKER:
+    elif board.get_piece((king[0], king[1] - 1)) == Piece.ATTACKER:
         c += 1
-        blocked_pos.append((king[0], king[1]-1))
-  
+        blocked_pos.append((king[0], king[1] - 1))
+
     return c, blocked_pos
 
 
-
-
-def position_weight(king: tuple [int, int]):
+def position_weight(king: tuple[int, int]):
     """
     Return a value depending on the position of the king on the board
 
@@ -169,13 +175,14 @@ def pawns_around(board: Board, pawn: tuple, distance: int):
     """
     x, y = pawn
     count = 0
-    for i in range(-distance, distance+1):
-        for j in range(-distance, distance+1):
+    for i in range(-distance, distance + 1):
+        for j in range(-distance, distance + 1):
             if i == 0 and j == 0:
                 continue
-            if (x+i, y+j) in board.get_black_coordinates():
+            if (x + i, y + j) in board.get_black_coordinates():
                 count += 1
     return count
+
 
 def piece_parser(piece: Piece) -> int:
     """
@@ -188,12 +195,13 @@ def piece_parser(piece: Piece) -> int:
     If the piece given is the KING, the function will return 1
     The second array given as input will be the one displaying the position of the KING in the 9x9 board (index 1 means second element)
     """
-    state_pieces = {Piece.DEFENDER : 0,
-                    Piece.KING : 1,
-                    Piece.ATTACKER : 2,
-                    Piece.CAMPS : 3,
-                    Piece.THRONE : 3}
+    state_pieces = {Piece.DEFENDER: 0,
+                    Piece.KING: 1,
+                    Piece.ATTACKER: 2,
+                    Piece.CAMPS: 3,
+                    Piece.THRONE: 3}
     return state_pieces[piece]
+
 
 class StateFeaturizer:
     """
@@ -202,6 +210,7 @@ class StateFeaturizer:
     Methods:
         generate_input(): Generates the tensor input of the DQN from the position of the pieces, the turn and the points given from the black and white heuristics
     """
+
     @staticmethod
     def generate_input(state_string: State):
         """
@@ -209,34 +218,38 @@ class StateFeaturizer:
 
         """
         position_layer = [np.zeros((9, 9), dtype=bool) for _ in range(4)]
-        for x,y in CAMPS:
-            position_layer[piece_parser(Piece.CAMPS)][x,y] = 1
-        position_layer[piece_parser(Piece.CAMPS)][4,4] = 1 
-        
+        for x, y in CAMPS:
+            position_layer[piece_parser(Piece.CAMPS)][x, y] = 1
+        position_layer[piece_parser(Piece.CAMPS)][4, 4] = 1
+
         board_str = state_string.board
-        
+
         for i in range(board_str.height):
             for j in range(board_str.width):
                 try:
-                    position = (i,j)  
+                    position = (i, j)
                     piece = piece_parser(Piece(board_str.get_piece(position)))
-                    position_layer[piece][-i-1, j] = True
+                    position_layer[piece][-i - 1, j] = True
                 except KeyError:
                     pass
-        
+
         turn_layer = np.array([1 if state_string.turn == 'W' else 0], dtype=bool)
 
-        w_heur_layer = np.array([board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str,board_str.king_pos()), king_surrounded(board_str)[0], position_weight(board_str.king_pos())])
-        
-        b_heur_layer = np.array([board_str.num_black(), board_str.num_white(), pawns_around(board_str, board_str.king_pos(), 1)])
+        w_heur_layer = np.array(
+            [board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str, board_str.king_pos()),
+             king_surrounded(board_str)[0], position_weight(board_str.king_pos())])
+
+        b_heur_layer = np.array(
+            [board_str.num_black(), board_str.num_white(), pawns_around(board_str, board_str.king_pos(), 1)])
 
         input_tensor = {"board_input": position_layer,
-                        "turn_input": turn_layer, 
+                        "turn_input": turn_layer,
                         "white_input": w_heur_layer,
                         "black_input": b_heur_layer}
         return input_tensor
 
-def black_win_con(board: Board, king: tuple [int, int]):
+
+def black_win_con(board: Board, king: tuple[int, int]):
     """
     Black player win condition is satisfied when the value of this function is 4, the king is surrounded on every side
 
@@ -253,7 +266,7 @@ def black_win_con(board: Board, king: tuple [int, int]):
         for j in range(-1, 2):
             if i == 0 and j == 0:
                 continue
-            if (x+i, y+j) in board.get_black_coordinates() or board.get_piece((x+i, y+j)) == Piece.THRONE or board.get_piece((x+i, y+j)) == Piece.CAMPS:
+            if (x + i, y + j) in board.get_black_coordinates() or board.get_piece(
+                    (x + i, y + j)) == Piece.THRONE or board.get_piece((x + i, y + j)) == Piece.CAMPS:
                 count += 1
     return count
-    
