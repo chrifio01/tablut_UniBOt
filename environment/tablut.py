@@ -13,7 +13,7 @@ from shared.heuristic import heuristic
 class Environment(BaseModel):
 
     board: Annotated[Board, "A class Board object"]
-    currentState: Annotated[State, "The current config of the board piecese, and player tourn"]
+    currentState: Annotated[State, "The current config of the board piecese, and player turn"]
     historyUpdater: Annotated[History, "Past states and moves"]
 
     def is_it_a_tie(self, match_id: int)->bool:
@@ -45,7 +45,7 @@ class Environment(BaseModel):
         return None
     
     def calculate_rewards(self, match_id: int):
-        return heuristic(self.currentState, self.historyUpdater.matches[match_id].turns[1])
+        return heuristic(self.currentState, self.historyUpdater.matches[match_id].turns[0])
     
     def update_state(self, move: Action):
         self.board.update_pieces(move)
