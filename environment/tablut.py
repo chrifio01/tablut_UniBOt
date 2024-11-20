@@ -21,7 +21,7 @@ class Environment(BaseModel):
             return True
         return False
 
-    def did_black_WIN(self, move: Action)->bool:
+    def did_black_WIN(self)->bool:
         if black_win_con(self.board, self.board.king_pos()) == 4:
             return True
         if self.currentState.turn == Turn.WHITE_TURN:      
@@ -29,7 +29,7 @@ class Environment(BaseModel):
                 return True
         return False
         
-    def did_white_WIN(self, move: Action)->bool:
+    def did_white_WIN(self)->bool:
         if self.board.king_pos() in WIN_TILES:
             return True
         if self.currentState.turn == Turn.BLACK_TURN:      
