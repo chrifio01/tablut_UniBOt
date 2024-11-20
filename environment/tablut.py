@@ -1,6 +1,4 @@
 import numpy as np
-
-from shared.loggers import logger
 from shared.utils.game_utils import Board, Action, Turn
 from shared.utils.env_utils import State, black_win_con
 from shared.consts import WIN_TILES
@@ -11,8 +9,8 @@ from shared.heuristic import heuristic
 
 class Environment:
     board: Board
-    currentState: State
-    historyUpdater: History
+    current_state: State
+    history: History
 
     def __init__(self, board: Board, current_state: State, history: History):
         self.board = board
@@ -62,11 +60,18 @@ class Environment:
 
     def calculate_rewards(self, match_id: int):
         turns = self.history.matches[match_id].turns
-        filtered_turns = list(filter(lambda tupla: tupla[0] == self.currentState, turns))
-        if not filtered_turns:
-            raise ValueError("Current state not found in turns.")
-        action = filtered_turns[0][1]
-        return heuristic(self.currentState, action)
+
+        if not turns:
+            raise ValueError("No turns found for the match.")
+
+        last_state, last_action, _ = turns[-1]
+
+        if self.currentState.board.pieces == last_state.board.pieces:
+            return heuristic(self.currentState, last_action)
+        else:
+            raise ValueError("Current state does not match the last state in history.")
+
+
 
     def update_state(self, move: Action):
         self.board.update_pieces(move)
