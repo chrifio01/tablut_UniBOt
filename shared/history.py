@@ -20,8 +20,8 @@ Methods:
     History.dump: Serializes the history of matches to a JSON string.
 """
 
-from typing import List, Tuple, Annotated, Optional, Dict
-from pydantic import BaseModel, ConfigDict
+from typing import List, Tuple, Union, Optional, Dict
+from pydantic import BaseModel
 from shared.utils import AbstractPlayer, Action, State, Turn
 
 class Match(BaseModel):
@@ -29,14 +29,14 @@ class Match(BaseModel):
     Model representing a match in the Tablut game.
 
     Attributes:
-        white_player (AbstractPlayer): The player playing as white.
-        black_player (AbstractPlayer): The player playing as black.
+        white_player (str): The player name playing as white.
+        black_player (str): The player name playing as black.
         turns (List[Tuple[State, Action, float]]): The list of turns taken during the match, each containing a state, an action, and a reward.
         outcome (Optional[Turn]): The outcome of the match.
     """
-    white_player: AbstractPlayer
-    black_player: AbstractPlayer
-    turns: List[Tuple[State, Action, float]]
+    white_player: str
+    black_player: str
+    turns: List[Tuple[State, Union[Action, None], Union[float, None]]]
     outcome: Optional[Turn]
     
     class Config:
@@ -49,16 +49,17 @@ class Match(BaseModel):
         Returns:
             str: A string with match details.
         """
-        turns_str = "\n".join(
-            f"Turn {i + 1}:\nState:\n{state}\nAction: {action}\nReward: {reward}"
+        turns_str = "\n\t\t\t".join(
+            f"Turn {i + 1}:\n___\nState:\n{state}\nAction:\n{action}\nReward: {reward}"
             for i, (state, action, reward) in enumerate(self.turns)
         )
         return (
-            f"Match ID: {self.match_id}\n"
-            f"White Player: {self.white_player.name}\n"
-            f"Black Player: {self.black_player.name}\n"
-            f"Turns:\n{turns_str}\n"
-            f"Outcome: {self.outcome}"
+            "\n_________________________________________\n"
+            f"White Player: {self.white_player}\n"
+            f"Black Player: {self.black_player}\n"
+            f"Turns:\n___________\n{turns_str}\n___________\n"
+            f"Outcome: {self.outcome}\n"
+            "_________________________________________\n"
         )
 
 class History(BaseModel):
@@ -68,9 +69,12 @@ class History(BaseModel):
     Attributes:
         matches (dict[int, Match]): A dictionary mapping match IDs to Match objects.
     """
-    matches: Annotated[Dict[int, Match], "A dictionary mapping match IDs to Match objects"]
+    matches: Dict[int, Match]
+    
+    class Config:
+        arbitrary_types_allowed = True
 
-    def update_history(self, match_id: int, white_player: AbstractPlayer, black_player: AbstractPlayer, state: State, action: Action, reward: float):
+    def update_history(self, match_id: int, white_player: str, black_player: str, state: State, action: Action, reward: float):
         """
         Updates the history with a new match, adding the match ID, state, action, and reward.
 
@@ -79,8 +83,8 @@ class History(BaseModel):
             state (State): The current state of the game.
             action (Action): The action taken by the player.
             reward (float): The reward received for the action.
-            white_player (AbstractPlayer): The player playing as white.
-            black_player (AbstractPlayer): The player playing as black.
+            white_player (str): The player playing as white.
+            black_player (str): The player playing as black.
         """
         if match_id not in self.matches:
             self.matches[match_id] = Match(
@@ -91,3 +95,16 @@ class History(BaseModel):
                 outcome=None
             )
         self.matches[match_id].turns.append((state, action, reward))
+        
+    def set_outcome(self, match_id: str, outcome: Turn):
+        if outcome not in (Turn.DRAW, Turn.BLACK_WIN, Turn.WHITE_WIN):
+            raise ValueError("Invalid outcome!")
+        if match_id not in self.matches:
+            raise ValueError("Match not found!")
+        self.matches[match_id].outcome = outcome
+        
+    def __str__(self):
+        string = "Matches:\n"
+        for match_id, match in self.matches.items():
+            string += f"\t{match_id}:\n{match}"
+        return string
