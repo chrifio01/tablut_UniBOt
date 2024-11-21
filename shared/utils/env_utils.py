@@ -220,31 +220,31 @@ class StateFeaturizer:
         Return the tensor representing the state which the DQN should receive as input to choose best action
 
         """
-        position_layer = [np.zeros((9, 9), dtype=bool) for _ in range(4)]
+        position_layer = np.zeros((4, 9, 9), dtype=bool)
         for x, y in CAMPS:
             position_layer[piece_parser(Piece.CAMPS)][x, y] = 1
         position_layer[piece_parser(Piece.CAMPS)][4, 4] = 1
 
-        board_str = state.board
+        board = state.board
 
-        for i in range(board_str.height):
-            for j in range(board_str.width):
+        for i in range(board.height):
+            for j in range(board.width):
                 try:
                     position = (i, j)
-                    piece = piece_parser(Piece(board_str.get_piece(position)))
+                    piece = piece_parser(Piece(board.get_piece(position)))
                     position_layer[piece][-i - 1, j] = True
                 except KeyError:
                     pass
 
         turn_layer = np.array([1 if player_color == Color.WHITE else 0], dtype=bool)
-
+        
         w_heur_layer = np.array(
-            [board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str, board_str.king_pos()),
-             king_surrounded(board_str)[0], position_weight(board_str.king_pos())])
+            [board.num_black(), board.num_white(), king_distance_from_center(board, board.king_pos()),
+             king_surrounded(board)[0], position_weight(board.king_pos())])
 
         b_heur_layer = np.array(
-            [board_str.num_black(), board_str.num_white(), pawns_around(board_str, board_str.king_pos(), 1)])
-        
+            [board.num_black(), board.num_white(), pawns_around(board, board.king_pos(), 1)])
+
         return FeaturizedState(board_input=position_layer, turn_input=turn_layer, white_input=w_heur_layer, black_input=b_heur_layer)
 
 
