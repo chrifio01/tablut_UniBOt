@@ -8,7 +8,8 @@ The main heuristic function integrates move validation and calculates a heuristi
 from shared.utils.env_utils import king_distance_from_center, king_surrounded, position_weight, pawns_around, State
 from shared.utils.game_utils import Action, Board, Turn
 from .move_checker import MoveChecker
-from .consts import ALPHA_W, BETA_W, GAMMA_W, THETA_W, EPSILON_W, OMEGA_W, ALPHA_B, BETA_B, GAMMA_B, THETA_B
+from .consts import ALPHA_W, BETA_W, GAMMA_W, THETA_W, EPSILON_W, OMEGA_W, ALPHA_B, BETA_B, GAMMA_B, THETA_B, INVALID_ACTION_PUNISHMENT
+from .exceptions import InvalidAction
 
 
 
@@ -101,7 +102,8 @@ def heuristic(state: State, move: Action):
     Return:
     float value of the move
     """
-    if MoveChecker.is_valid_move(state, move):
+    try:
+        MoveChecker.is_valid_move(state, move)
 
         board = Board(state.board.pieces)
 
@@ -113,4 +115,6 @@ def heuristic(state: State, move: Action):
         if move.turn == Turn.BLACK_TURN:
             return _black_heuristic(board) - _white_heuristic(board)
         return None
-    return -9999
+    except InvalidAction:
+        # If the move is invalid, return a very low value to avoid the move from being chosen
+        return INVALID_ACTION_PUNISHMENT
