@@ -69,17 +69,17 @@ class History(BaseModel):
     Attributes:
         matches (dict[int, Match]): A dictionary mapping match IDs to Match objects.
     """
-    matches: Dict[int, Match]
+    matches: Dict[str, Match]
     
     class Config:
         arbitrary_types_allowed = True
 
-    def update_history(self, match_id: int, white_player: str, black_player: str, state: State, action: Action, reward: float):
+    def update_history(self, match_id: str, white_player: str, black_player: str, state: State, action: Action, reward: float):
         """
         Updates the history with a new match, adding the match ID, state, action, and reward.
 
         Args:
-            match_id (int): The unique identifier for the match.
+            match_id (str): The unique identifier for the match.
             state (State): The current state of the game.
             action (Action): The action taken by the player.
             reward (float): The reward received for the action.
