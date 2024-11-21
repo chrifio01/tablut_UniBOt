@@ -21,7 +21,7 @@ from typing import Annotated
 import numpy as np
 from pydantic import BaseModel
 from shared.consts import WEIGHTS, CAMPS, INITIAL_STATE
-from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn
+from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn, Color
 
 __all__ = ['State', 'strp_state', 'state_decoder']
 
@@ -45,12 +45,6 @@ class State(BaseModel):
 
     def __str__(self):
         return f"{self.board.__str__()}\n-\n{self.turn.value}"
-
-    def reset(self):
-        """
-        Reset the state to the initial configuration.
-        """
-        pass
 
 
 def state_decoder(obj: dict):
@@ -202,6 +196,15 @@ def piece_parser(piece: Piece) -> int:
                     Piece.THRONE: 3}
     return state_pieces[piece]
 
+class FeaturizedState(BaseModel):
+    
+    board_input: np.ndarray
+    turn_input: np.ndarray
+    white_input: np.ndarray
+    black_input: np.ndarray
+    
+    class Config:
+        arbitrary_types_allowed = True    
 
 class StateFeaturizer:
     """
@@ -212,7 +215,7 @@ class StateFeaturizer:
     """
 
     @staticmethod
-    def generate_input(state_string: State):
+    def generate_input(state: State, player_color: Color) -> FeaturizedState:
         """
         Return the tensor representing the state which the DQN should receive as input to choose best action
 
@@ -222,7 +225,7 @@ class StateFeaturizer:
             position_layer[piece_parser(Piece.CAMPS)][x, y] = 1
         position_layer[piece_parser(Piece.CAMPS)][4, 4] = 1
 
-        board_str = state_string.board
+        board_str = state.board
 
         for i in range(board_str.height):
             for j in range(board_str.width):
@@ -233,7 +236,7 @@ class StateFeaturizer:
                 except KeyError:
                     pass
 
-        turn_layer = np.array([1 if state_string.turn == 'W' else 0], dtype=bool)
+        turn_layer = np.array([1 if player_color == Color.WHITE else 0], dtype=bool)
 
         w_heur_layer = np.array(
             [board_str.num_black(), board_str.num_white(), king_distance_from_center(board_str, board_str.king_pos()),
@@ -241,12 +244,8 @@ class StateFeaturizer:
 
         b_heur_layer = np.array(
             [board_str.num_black(), board_str.num_white(), pawns_around(board_str, board_str.king_pos(), 1)])
-
-        input_tensor = {"board_input": position_layer,
-                        "turn_input": turn_layer,
-                        "white_input": w_heur_layer,
-                        "black_input": b_heur_layer}
-        return input_tensor
+        
+        return FeaturizedState(board_input=position_layer, turn_input=turn_layer, white_input=w_heur_layer, black_input=b_heur_layer)
 
 
 def black_win_con(board: Board, king: tuple[int, int]):
