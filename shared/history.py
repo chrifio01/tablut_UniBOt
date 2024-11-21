@@ -29,19 +29,18 @@ class Match(BaseModel):
     Model representing a match in the Tablut game.
 
     Attributes:
-        match_id (int): The unique identifier for the match.
         white_player (AbstractPlayer): The player playing as white.
         black_player (AbstractPlayer): The player playing as black.
         turns (List[Tuple[State, Action, float]]): The list of turns taken during the match, each containing a state, an action, and a reward.
         outcome (Optional[Turn]): The outcome of the match.
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    match_id: Annotated[int, "The unique identifier for the match"]
-    white_player: Annotated[AbstractPlayer, "The player playing as white"]
-    black_player: Annotated[AbstractPlayer, "The player playing as black"]
-    turns: Annotated[List[Tuple[State, Action, float]], "The list of turns taken during the match, each containing a state, an action, and a reward"]
-    outcome: Annotated[Optional[Turn], "The outcome of the match"]
+    white_player: AbstractPlayer
+    black_player: AbstractPlayer
+    turns: List[Tuple[State, Action, float]]
+    outcome: Optional[Turn]
+    
+    class Config:
+        arbitrary_types_allowed = True
 
     def __str__(self) -> str:
         """
