@@ -163,9 +163,37 @@ class MoveChecker:
                         Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn))
 
         return all_actions
+    
+    @staticmethod
+    def __gen_all_moves(state: State):
+        """
+        Generates all possible moves for the current turn player based on piece positions.
+
+        Args:
+            state (State): The current game state.
+
+        Returns:
+            List[Action]: All possible moves in the current state.
+        """
+        turn = state.turn
+        board_height, board_width = state.board.height, state.board.width
+
+        if turn == Turn.WHITE_TURN:
+            positions = list(
+                zip(*np.where((state.board.pieces == Piece.DEFENDER) | (state.board.pieces == Piece.KING))))
+        else:
+            positions = list(zip(*np.where(state.board.pieces == Piece.ATTACKER)))
+
+        for row, column in positions:
+            for index in range(board_height):
+                if index != row:
+                    yield Action(from_=strf_square((row, column)), to_=strf_square((index, column)), turn=turn)
+            for index in range(board_width):
+                if index != column:
+                    yield Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn)
 
     @classmethod
-    def get_possible_moves(cls, state: State) -> List[Action]:
+    def gen_possible_moves(cls, state: State) -> List[Action]:
         """
         Filters and returns valid moves from all possible moves for the current player.
 
@@ -173,16 +201,6 @@ class MoveChecker:
             state (State): The current game state.
 
         Returns:
-            List[Action]: Valid moves for the current game state.
+            Generator[Action]: Valid moves for the current game state.
         """
-        possible_moves = cls.__get_all_moves(state)
-        moves = []
-
-        for move in possible_moves:
-            try:
-                cls.is_valid_move(state, move)
-                moves.append(move)
-            except InvalidAction:
-                pass
-
-        return moves
+        return (move for move in cls.__gen_all_moves(state) if cls.is_valid_move(state, move))
