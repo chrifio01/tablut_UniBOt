@@ -202,10 +202,13 @@ class Environment(PyEnvironment):
 
     def _is_it_a_tie(self) -> bool:
         """Check if the current state is a tie."""
+        self.state_frequency = {}
         current_hash = hash(self.current_state.board.pieces.tobytes())
-        
-        state_hashes = [hash(turn[0].board.pieces.tobytes()) for turn in self.history.matches[self._current_match_id].turns]
-        return state_hashes.count(current_hash) >= 2
+        if current_hash in self.state_frequency:
+            self.state_frequency[current_hash] += 1
+        else:
+            self.state_frequency[current_hash] = 1
+        return self.state_frequency[current_hash] >= 2
 
     def _did_black_win(self) -> bool:
         """Check if black has won."""
