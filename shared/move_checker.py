@@ -193,7 +193,7 @@ class MoveChecker:
                     yield Action(from_=strf_square((row, column)), to_=strf_square((row, index)), turn=turn)
 
     @classmethod
-    def gen_possible_moves(cls, state: State) -> List[Action]:
+    def gen_possible_moves(cls, state: State):
         """
         Filters and returns valid moves from all possible moves for the current player.
 
@@ -203,4 +203,9 @@ class MoveChecker:
         Returns:
             Generator[Action]: Valid moves for the current game state.
         """
-        return (move for move in cls.__gen_all_moves(state) if cls.is_valid_move(state, move))
+        for move in cls.__gen_all_moves(state):
+            try:
+                cls.is_valid_move(state, move)
+                yield move
+            except InvalidAction:
+                continue
