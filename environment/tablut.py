@@ -89,6 +89,7 @@ class Environment(PyEnvironment):
         self._trainer = trainer
         self._opponent = opponent or self._init_opponent()
         self.reward_function = reward_function or heuristic
+        self.state_frequency = {}
         self._set_trainer_color()
         logger.debug(f"Trainer color: {self._trainer.color}\tOpponent color: {self._opponent.color}")
 
@@ -163,7 +164,7 @@ class Environment(PyEnvironment):
         self._episode_ended = False
         self._current_match_id = self._create_match_id()
         self._opponent.color = random.choice([Color.BLACK, Color.WHITE])
-        self.state_frequency = {}
+        self.state_frequency.clear()
         self._set_trainer_color()
         self._initialize_match()
         return ts.restart(state_to_tensor(self.current_state, self._trainer.color))
