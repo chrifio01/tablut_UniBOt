@@ -264,7 +264,7 @@ def black_win_con(board: Board, king: tuple[int, int]):
     adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
 
     for pos in adjacent_positions:
-        if pos in board.get_black_coordinates() or board.get_piece(pos) == Piece.THRONE or board.get_piece(pos) == Piece.CAMPS:
+        if pos in board.get_black_coordinates() or board.get_piece(pos) == Piece.THRONE or board.get_piece(pos) == Piece.CAMPS or board.get_piece(pos) == Piece.DEFENDER:
             count += 1
 
     return count
