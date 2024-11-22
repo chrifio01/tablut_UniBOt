@@ -163,6 +163,7 @@ class Environment(PyEnvironment):
         self._episode_ended = False
         self._current_match_id = self._create_match_id()
         self._opponent.color = random.choice([Color.BLACK, Color.WHITE])
+        self.state_frequency = {}
         self._set_trainer_color()
         self._initialize_match()
         return ts.restart(state_to_tensor(self.current_state, self._trainer.color))
@@ -202,7 +203,6 @@ class Environment(PyEnvironment):
 
     def _is_it_a_tie(self) -> bool:
         """Check if the current state is a tie."""
-        self.state_frequency = {}
         current_hash = hash(self.current_state.board.pieces.tobytes())
         if current_hash in self.state_frequency:
             self.state_frequency[current_hash] += 1
