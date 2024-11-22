@@ -322,7 +322,6 @@ class Environment(PyEnvironment):
         logger.info(f"Final reward: {final_reward}")
         self.history.set_outcome(self._current_match_id, self.current_state.turn)
         self._update_history(self._current_match_id, self.current_state, None, final_reward)
-        self._reset()
 
     def _assign_termination_reward(self) -> float:
         """Assign the final reward based on the match outcome."""
