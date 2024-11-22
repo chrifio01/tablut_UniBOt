@@ -1,3 +1,7 @@
+"""
+Entrypoint for the TablutClient module.
+"""
+
 import os
 from shared.random_player import RandomPlayer
 from shared.utils import strp_color
@@ -6,7 +10,6 @@ from shared.loggers import logger
 from connectors.client import Client
 
 if __name__ == '__main__':
-
     try:
         PLAYER_COLOR = os.environ['PLAYER_COLOR']
         TIMEOUT = os.environ['TIMEOUT']
