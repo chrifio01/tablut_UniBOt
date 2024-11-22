@@ -38,8 +38,14 @@ class Match(BaseModel):
     black_player: str
     turns: List[Tuple[State, Union[Action, None], Union[float, None]]]
     outcome: Optional[Turn]
-    
+
     class Config:
+        """
+        Configuration class for the Pydantic model.
+
+        Attributes:
+            arbitrary_types_allowed (bool): Allows the model to accept arbitrary types.
+        """
         arbitrary_types_allowed = True
 
     def __str__(self) -> str:
