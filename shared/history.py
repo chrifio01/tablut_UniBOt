@@ -70,8 +70,14 @@ class History(BaseModel):
         matches (dict[int, Match]): A dictionary mapping match IDs to Match objects.
     """
     matches: Dict[str, Match]
-    
+
     class Config:
+        """
+        Configuration class for the Pydantic model.
+
+        Attributes:
+            arbitrary_types_allowed (bool): Allows the model to accept arbitrary types.
+        """
         arbitrary_types_allowed = True
 
     def update_history(self, match_id: str, white_player: str, black_player: str, state: State, action: Action, reward: float):
@@ -95,15 +101,31 @@ class History(BaseModel):
                 outcome=None
             )
         self.matches[match_id].turns.append((state, action, reward))
-        
+
     def set_outcome(self, match_id: str, outcome: Turn):
+        """
+        Sets the outcome of a match.
+
+        Args:
+            match_id (str): The unique identifier for the match.
+            outcome (Turn): The outcome of the match, which can be Turn.DRAW, Turn.BLACK_WIN, or Turn.WHITE_WIN.
+
+        Raises:
+            ValueError: If the outcome is invalid or the match ID is not found.
+        """
         if outcome not in (Turn.DRAW, Turn.BLACK_WIN, Turn.WHITE_WIN):
             raise ValueError("Invalid outcome!")
         if match_id not in self.matches:
             raise ValueError("Match not found!")
         self.matches[match_id].outcome = outcome
-        
-    def __str__(self):
+
+    def __str__(self) -> str:
+        """
+        Returns a human-readable string representing the history of matches.
+
+        Returns:
+            str: A string with details of all matches.
+        """
         string = "Matches:\n"
         for match_id, match in self.matches.items():
             string += f"\t{match_id}:\n{match}"
