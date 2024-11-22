@@ -85,6 +85,7 @@ class Environment(PyEnvironment):
         # Game and trainer settings
         logger.debug("Initializing environment...")
         self.current_state = current_state
+        logger.debug(self.current_state.board)
         self.history = history
         self._trainer = trainer
         self._opponent = opponent or self._init_opponent()
@@ -319,8 +320,8 @@ class Environment(PyEnvironment):
         self._episode_ended = True
         final_reward = self._assign_termination_reward()
         logger.info(f"Final reward: {final_reward}")
-        self._update_history(self._current_match_id, self.current_state, None, final_reward)
         self.history.set_outcome(self._current_match_id, self.current_state.turn)
+        self._update_history(self._current_match_id, self.current_state, None, final_reward)
 
     def _assign_termination_reward(self) -> float:
         """Assign the final reward based on the match outcome."""
