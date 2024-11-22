@@ -254,17 +254,18 @@ def black_win_con(board: Board, king: tuple[int, int]):
 
     Arg:
     Board object
-    The king postition as a tuple of int
+    The king position as a tuple of int
 
-    Return: 
-    The number of blocked sides of the king 
+    Return:
+    The number of blocked sides of the king
     """
     x, y = king
     count = 0
     adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
 
     for pos in adjacent_positions:
-        if pos in board.get_black_coordinates() or board.get_piece(pos) == Piece.THRONE or board.get_piece(pos) == Piece.CAMPS or board.get_piece(pos) == Piece.DEFENDER:
-            count += 1
+        if 0 <= pos[0] < board.height and 0 <= pos[1] < board.width:
+            if pos in board.get_black_coordinates() or board.get_piece(pos) in {Piece.THRONE, Piece.CAMPS, Piece.DEFENDER}:
+                count += 1
 
     return count
