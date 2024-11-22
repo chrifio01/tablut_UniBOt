@@ -20,7 +20,7 @@ from math import sqrt
 from typing import Annotated
 import numpy as np
 from pydantic import BaseModel
-from shared.consts import WEIGHTS, CAMPS, INITIAL_STATE
+from shared.consts import WEIGHTS, CAMPS
 from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn, Color
 
 __all__ = ['State', 'strp_state', 'state_decoder']
@@ -197,14 +197,28 @@ def piece_parser(piece: Piece) -> int:
     return state_pieces[piece]
 
 class FeaturizedState(BaseModel):
-    
+    """
+    Model representing the featurized state of the Tablut game for input into the DQN.
+
+    Attributes:
+        board_input (np.ndarray): A 5x9x9 boolean array representing the positions of different pieces on the board.
+        turn_input (np.ndarray): A boolean array indicating the current player's turn.
+        white_input (np.ndarray): An array containing heuristic values for the white player.
+        black_input (np.ndarray): An array containing heuristic values for the black player.
+    """
     board_input: np.ndarray
     turn_input: np.ndarray
     white_input: np.ndarray
     black_input: np.ndarray
-    
+
     class Config:
-        arbitrary_types_allowed = True    
+        """
+        Configuration class for the Pydantic model.
+
+        Attributes:
+            arbitrary_types_allowed (bool): Allows the model to accept arbitrary types.
+        """
+        arbitrary_types_allowed = True
 
 class StateFeaturizer:
     """

@@ -22,7 +22,7 @@ Methods:
 
 from typing import List, Tuple, Union, Optional, Dict
 from pydantic import BaseModel
-from shared.utils import AbstractPlayer, Action, State, Turn
+from shared.utils import Action, State, Turn
 
 class Match(BaseModel):
     """

@@ -13,7 +13,7 @@ Classes:
 - Environment: The primary RL environment class for Ashton Tablut.
 """
 
-from typing import Tuple, Union
+from typing import Tuple
 from datetime import datetime
 import random
 import copy
@@ -297,14 +297,13 @@ class Environment(PyEnvironment):
             self._handle_turn_and_outcome(move)
             return reward
 
-        else:
-            assert reward == INVALID_ACTION_PUNISHMENT
-            logger.debug("Invalid move by the Trainer: \n%s", move)
-            self._update_history(self._current_match_id, self.current_state, move, reward)
-            self._episode_ended = True  # no reward assigned cause it was player fault
-            self.current_state.turn = Turn.BLACK_WIN if self._trainer.color.value == Turn.WHITE_TURN.value else Turn.WHITE_WIN
-            self.history.set_outcome(self._current_match_id, self.current_state.turn)
-            return reward
+        assert reward == INVALID_ACTION_PUNISHMENT
+        logger.debug("Invalid move by the Trainer: \n%s", move)
+        self._update_history(self._current_match_id, self.current_state, move, reward)
+        self._episode_ended = True  # no reward assigned cause it was player fault
+        self.current_state.turn = Turn.BLACK_WIN if self._trainer.color.value == Turn.WHITE_TURN.value else Turn.WHITE_WIN
+        self.history.set_outcome(self._current_match_id, self.current_state.turn)
+        return reward
 
     def _handle_turn_and_outcome(self, move: Action):
         """Handle the turn progression and match outcome."""
@@ -343,7 +342,7 @@ class Environment(PyEnvironment):
         except InvalidAction:
             logger.debug("Opponent performed an invalid action: \n%s", opponent_action)
             self._update_history(self._current_match_id, self.current_state, opponent_action, None)
-            self._reset()  # Hope that this will be never reached
+            self._reset()
 
     def _end_match(self):
         """Handle the end of the match."""

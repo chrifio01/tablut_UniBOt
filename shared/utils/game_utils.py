@@ -121,14 +121,25 @@ def strp_turn(turn_str: str) -> Turn:
     raise ValueError(f"Invalid turn string: {turn_str}")
 
 def winner_color(turn: Turn) -> Union[Color, None]:
+    """
+    Determines the winner's color based on the turn state.
+
+    Args:
+        turn (Turn): The current turn state.
+
+    Returns:
+        Union[Color, None]: The color of the winning player if there is a winner, otherwise None.
+
+    Raises:
+        ValueError: If the turn state indicates that the game is still ongoing.
+    """
     if turn == Turn.WHITE_WIN:
         return Color.WHITE
     if turn == Turn.BLACK_WIN:
         return Color.BLACK
     if turn in (Turn.WHITE_TURN, Turn.BLACK_TURN):
-        raise ValueError("No winner")
+        raise ValueError("No Winner")
     return None
-
 
 class Action(BaseModel):
     """
