@@ -67,7 +67,7 @@ class Environment(PyEnvironment):
         _update_history(match_id, state, action, reward): Updates the match history.
         _update_state(move): Updates the game state based on the trainer's move.
     """
-    
+
     def __init__(
         self,
         current_state: State = strp_state(INITIAL_STATE),
@@ -175,7 +175,7 @@ class Environment(PyEnvironment):
         logger.debug(f"Episode ended: {self._episode_ended}")
         if self._episode_ended:
             return self._reset()
-        
+
         # Update state and get trainer's reward
         logger.debug(f"Updating state with action:\n{action}")
         trainer_reward = self._update_state(action)
@@ -192,10 +192,10 @@ class Environment(PyEnvironment):
             logger.debug(f"Final reward: {final_reward}")
             return ts.termination(
                 state_to_tensor(self.current_state, self._trainer.color), reward=final_reward
-                )
+            )
 
         logger.debug(f"Continuing with state:\n{self.current_state}\nReward: {trainer_reward}")
-        
+
         # Continue the episode
         return ts.transition(
             state_to_tensor(self.current_state, self._trainer.color),
@@ -257,7 +257,7 @@ class Environment(PyEnvironment):
     def _update_state(self, move: Action):
         """Update the state with a given move."""
         reward = self._calculate_rewards(copy.deepcopy(self.current_state), move)
-        
+
         if reward != INVALID_ACTION_PUNISHMENT:
             logger.debug(f'Calculated reward: {reward}')
             self._update_history(self._current_match_id, self.current_state, move, reward)
@@ -265,12 +265,12 @@ class Environment(PyEnvironment):
             logger.debug(f"Updated Board:\n{self.current_state.board}")
             self._handle_turn_and_outcome(move)
             return reward
-        
+
         else:
             assert reward == INVALID_ACTION_PUNISHMENT
             logger.debug(f"Invalid move by the Trainer: \n{move}")
             self._update_history(self._current_match_id, self.current_state, move, reward)
-            self._episode_ended = True # no reward assigned cause it was player fault
+            self._episode_ended = True  # no reward assigned cause it was player fault
             self.current_state.turn = Turn.BLACK_WIN if self._trainer.color.value == Turn.WHITE_TURN.value else Turn.WHITE_WIN
             self.history.set_outcome(self._current_match_id, self.current_state.turn)
             return reward
@@ -312,7 +312,7 @@ class Environment(PyEnvironment):
         except InvalidAction:
             logger.debug(f"Opponent performed an invalid action: \n{opponent_action}")
             self._update_history(self._current_match_id, self.current_state, opponent_action, None)
-            self._reset()   # Hope that this will be never reached
+            self._reset()  # Hope that this will be never reached
 
     def _end_match(self):
         """Handle the end of the match."""
