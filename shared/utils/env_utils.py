@@ -261,11 +261,10 @@ def black_win_con(board: Board, king: tuple[int, int]):
     """
     x, y = king
     count = 0
-    for i in range(-1, 2):
-        for j in range(-1, 2):
-            if i == 0 and j == 0:
-                continue
-            if (x + i, y + j) in board.get_black_coordinates() or board.get_piece(
-                    (x + i, y + j)) == Piece.THRONE or board.get_piece((x + i, y + j)) == Piece.CAMPS:
-                count += 1
+    adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+
+    for pos in adjacent_positions:
+        if pos in board.get_black_coordinates() or board.get_piece(pos) == Piece.THRONE or board.get_piece(pos) == Piece.CAMPS:
+            count += 1
+
     return count
