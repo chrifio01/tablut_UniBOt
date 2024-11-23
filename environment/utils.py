@@ -178,19 +178,32 @@ class ActionDecoder:
         return tuple(sorted_indices[piece_rank])
     
     @staticmethod
-    def decode(action_tensor: np.ndarray, state: State) -> Action:
+    def decode(flat_action_tensor: np.ndarray, state: State) -> Action:
         """
-        Decode the action tensor into a valid Tablut action.
+        Decode the flattened action tensor into a valid Tablut action.
 
         Args:
-            action_tensor (np.ndarray): The tensor representing the action.
+            flat_action_tensor (np.ndarray): The flattened action tensor of size 400.
             state (State): The current game state.
 
         Returns:
             Action: The decoded action object.
         """
-        action_index = np.unravel_index(np.argmax(action_tensor), action_tensor.shape)
-        from_tuple = ActionDecoder._get_moving_pawn_coordinates(action_index, state)
-        to_tuple = ActionDecoder._get_destination_coordinates(action_index, from_tuple, state)
+        # Find the index of the maximum Q-value in the flattened action tensor
+        flat_index = np.argmax(flat_action_tensor)
+
+        # Map flat index to 2D action indices: (action_column_index, move_index)
+        action_column_index = flat_index // 16
+        move_index = flat_index % 16
+
+        # Get the starting coordinates of the pawn being moved
+        from_tuple = ActionDecoder._get_moving_pawn_coordinates((action_column_index, move_index), state)
+
+        # Get the destination coordinates for the pawn
+        to_tuple = ActionDecoder._get_destination_coordinates((action_column_index, move_index), from_tuple, state)
+
+        # Retrieve the turn information from the state
         turn = state.turn
+
+        # Return the constructed Action object
         return Action(from_=strf_square(from_tuple), to_=strf_square(to_tuple), turn=turn)
