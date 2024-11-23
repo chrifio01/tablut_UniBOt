@@ -31,6 +31,7 @@ from shared.exceptions import InvalidAction
 from shared.heuristic import heuristic
 from shared.random_player import RandomPlayer
 from shared.loggers import logger
+from environment.utils import ActionDecoder
 from .utils import state_to_tensor
 
 
@@ -129,7 +130,7 @@ class Environment(PyEnvironment):
             "reward_function": self.reward_function
         }
 
-    def get_state(self):
+    def get_state(self) -> State:
         """
         Returns the current state of the environment.
         """
@@ -201,15 +202,16 @@ class Environment(PyEnvironment):
         self._initialize_match()
         return ts.restart(state_to_tensor(self.current_state, self._trainer.color))
 
-    def _step(self, action: Action) -> TimeStep:
+    def _step(self, action_tensor: np.ndarray) -> TimeStep:
         """Advance the environment by one step."""
         logger.debug("Episode ended: %s", self._episode_ended)
         if self._episode_ended:
             return self._reset()
 
+        decoded_action = ActionDecoder.decode(action_tensor, self.current_state)
         # Update state and get trainer's reward
-        logger.debug("Updating state with action: %s\n", action)
-        trainer_reward = self._update_state(action)
+        logger.debug("Updating state with action: %s\n", decoded_action)
+        trainer_reward = self._update_state(decoded_action)
 
         # Check termination conditions
         logger.debug("Checking termination condition...")
