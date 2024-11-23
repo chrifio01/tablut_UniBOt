@@ -279,7 +279,7 @@ def black_win_con(board: Board, king: tuple[int, int]):
 
     for pos in adjacent_positions:
         if 0 <= pos[0] < board.height and 0 <= pos[1] < board.width:
-            if pos in board.get_black_coordinates() or board.get_piece(pos) in {Piece.THRONE, Piece.CAMPS, Piece.DEFENDER}:
+            if pos in board.get_black_coordinates() or board.get_piece(pos) in {Piece.THRONE, Piece.CAMPS, Piece.ATTACKER}:
                 count += 1
 
     return count
