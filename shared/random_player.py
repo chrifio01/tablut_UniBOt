@@ -27,7 +27,7 @@ class RandomPlayer(AbstractPlayer):
         """
         super().__init__()
         self._current_state = initial_state
-        self._name = f'RandomPlayer_{color.value}'
+        self._name = f'RandomPlayer_{color.value}' if color else "RandomPlayer"
         self._color = color
 
     def send_move(self) -> None:
@@ -46,5 +46,5 @@ class RandomPlayer(AbstractPlayer):
         Returns:
             Action: A random valid action that the player can take based on the current game state.
         """
-        possible_moves = MoveChecker.get_possible_moves(state)
-        return random.choice(possible_moves)
+        possible_moves = MoveChecker.gen_possible_moves(state)
+        return random.choice(list(possible_moves))

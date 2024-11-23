@@ -1,6 +1,7 @@
 """
-    Entrypoint for the TablutClient.
+Entrypoint for the TablutClient module.
 """
+
 import os
 from shared.random_player import RandomPlayer
 from shared.utils import strp_color
@@ -23,8 +24,7 @@ if __name__ == '__main__':
         }
         player = RandomPlayer(color=strp_color(PLAYER_COLOR))
         client = Client(player=player, settings=settings)
-    
+
         client.main()
     except Exception as e:
         logger.error("An error occurred: %s", e)
-        

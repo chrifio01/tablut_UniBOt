@@ -76,6 +76,10 @@ class AbstractPlayer(ABC):
             Color: The color of the player, either WHITE or BLACK.
         """
         return self._color
+    
+    @color.setter
+    def color(self, new_color: Color) -> None:
+        self._color = new_color
 
     @abstractmethod
     def send_move(self) -> None:
