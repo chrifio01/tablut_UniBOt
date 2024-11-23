@@ -8,7 +8,7 @@ model:
 
 env:
   observation_spec:
-    shape: [323,]                    # Shape of observation
+    shape: [333,]                    # Shape of observation
   action_spec:
     shape: [400,]                    # Shape of action
   max_episode_steps: 1000         # Maximum steps in an episode

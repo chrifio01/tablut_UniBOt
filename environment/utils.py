@@ -27,4 +27,4 @@ def state_to_tensor(state: State, player_color: Color):
         featurized_state.turn_input,
         featurized_state.white_input,
         featurized_state.black_input,
-    ])
+    ], axis=0).astype(np.float16)
