@@ -237,10 +237,7 @@ class Environment(PyEnvironment):
     def _is_it_a_tie(self) -> bool:
         """Check if the current state is a tie."""
         current_hash = hash(self.current_state.board.pieces.tobytes())
-        if current_hash in self.state_frequency:
-            self.state_frequency[current_hash] += 1
-        else:
-            self.state_frequency[current_hash] = 1
+        self.state_frequency[current_hash] = self.state_frequency.get(current_hash, 0) + 1
         return self.state_frequency[current_hash] >= 2
 
     def _did_black_win(self) -> bool:
