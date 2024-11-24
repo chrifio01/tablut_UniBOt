@@ -23,6 +23,8 @@ from tf_agents.environments.py_environment import PyEnvironment
 from tf_agents.specs import ArraySpec, array_spec
 from tf_agents.trajectories import time_step as ts
 from tf_agents.trajectories.time_step import TimeStep
+from tf_agents.environments import tf_py_environment
+
 from shared.utils import Action, Turn, State, black_win_con, strp_state, AbstractPlayer, Color, winner_color
 from shared.consts import WIN_TILES, INITIAL_STATE, WIN_REWARD, LOSS_REWARD, DRAW_REWARD, INVALID_ACTION_PUNISHMENT
 from shared.history import History, Match
@@ -80,7 +82,9 @@ class Environment(PyEnvironment):
         discount_factor: float,
         standard_dtype: np.dtype = np.float16,
         reward_function=None,
-        opponent=None
+        opponent=None,
+        action_min: int = 0,
+        action_max: int = 399
     ):
         super().__init__()
         # Game and trainer settings
@@ -103,6 +107,8 @@ class Environment(PyEnvironment):
         self._standard_dtype = standard_dtype
         self._discount_factor = discount_factor
         logger.debug("discount_factor: %s", self._discount_factor)
+        self._action_min = action_min
+        self._action_max = action_max
 
         # Auxiliary variables
         self._episode_ended = False
@@ -141,6 +147,9 @@ class Environment(PyEnvironment):
         Sets the state of the environment.
         """
         self.current_state = state
+        
+    def to_TFPy(self):
+        return tf_py_environment.TFPyEnvironment(self)
 
 
     @staticmethod
@@ -184,7 +193,7 @@ class Environment(PyEnvironment):
 
     def action_spec(self):
         return array_spec.BoundedArraySpec(
-            shape=(), dtype=self._standard_dtype, minimum=0, maximum=400, name='action')
+            shape=(), dtype=np.int16, minimum=self._action_min, maximum=self._action_max, name='action')
 
     def observation_spec(self):
         return ArraySpec(
@@ -202,7 +211,7 @@ class Environment(PyEnvironment):
         self._initialize_match()
         return ts.restart(state_to_tensor(self.current_state, self._trainer.color))
 
-    def _step(self, action_tensor: np.ndarray) -> TimeStep:
+    def _step(self, action_tensor: int) -> TimeStep:
         """Advance the environment by one step."""
         logger.debug("Episode ended: %s", self._episode_ended)
         if self._episode_ended:
