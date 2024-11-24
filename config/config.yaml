@@ -5,6 +5,9 @@ model:
     hidden_layers_num: 3          # Number of hidden layers in the neural network
     neurons_per_layer: 48         # Number of neurons in each hidden layer
     activation: relu              # Activation function (e.g., relu, tanh)
+  replay_memory:
+    buffer_size: 100000            # Size of the replay memory
+    batch_size: 64                  # Batch size for training
 
 env:
   observation_spec:
