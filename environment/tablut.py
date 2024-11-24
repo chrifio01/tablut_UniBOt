@@ -20,7 +20,7 @@ import copy
 
 import numpy as np
 from tf_agents.environments.py_environment import PyEnvironment
-from tf_agents.specs import ArraySpec
+from tf_agents.specs import ArraySpec, array_spec
 from tf_agents.trajectories import time_step as ts
 from tf_agents.trajectories.time_step import TimeStep
 from shared.utils import Action, Turn, State, black_win_con, strp_state, AbstractPlayer, Color, winner_color
@@ -183,8 +183,8 @@ class Environment(PyEnvironment):
                 self._end_match()
 
     def action_spec(self):
-        return ArraySpec(
-            shape=self._action_spec_shape, dtype=self._standard_dtype, name='action')
+        return array_spec.BoundedArraySpec(
+            shape=(), dtype=self._standard_dtype, minimum=0, maximum=400, name='action')
 
     def observation_spec(self):
         return ArraySpec(
