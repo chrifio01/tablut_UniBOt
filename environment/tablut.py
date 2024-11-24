@@ -151,7 +151,6 @@ class Environment(PyEnvironment):
     def to_TFPy(self):
         return tf_py_environment.TFPyEnvironment(self)
 
-
     @staticmethod
     def _init_opponent():
         """Initialize a default random opponent."""
@@ -193,7 +192,7 @@ class Environment(PyEnvironment):
 
     def action_spec(self):
         return array_spec.BoundedArraySpec(
-            shape=(), dtype=np.int16, minimum=self._action_min, maximum=self._action_max, name='action')
+            shape=(), dtype=np.int32, minimum=self._action_min, maximum=self._action_max, name='action')
 
     def observation_spec(self):
         return ArraySpec(
