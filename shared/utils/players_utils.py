@@ -82,14 +82,6 @@ class AbstractPlayer(ABC):
         self._color = new_color
 
     @abstractmethod
-    def send_move(self) -> None:
-        """
-        Abstract method for sending the player's selected move to the game.
-
-        Implementations should define how the player submits a chosen move to the game.
-        """
-
-    @abstractmethod
     def fit(self, state: State, *args, **kwargs) -> Action:
         """
         Abstract method to calculate the optimal move based on the current state.
