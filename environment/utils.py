@@ -35,7 +35,7 @@ def state_to_tensor(state: State, player_color: Color) -> np.ndarray:
         featurized_state.white_input,
         featurized_state.black_input,
     ]).astype(np.float16)
-
+    
 class ActionDecoder:
     """
     Decodes an action tensor produced by a DQN model into a valid Tablut action.
@@ -60,7 +60,7 @@ class ActionDecoder:
         decode(action_tensor: np.ndarray, state: State) -> Action:
             Converts a DQN-generated action tensor into a valid Tablut action.
     """
-
+    
     @staticmethod
     def _get_piece_type(action_column_index: int) -> Piece:
         """
@@ -79,7 +79,7 @@ class ActionDecoder:
         if action_column_index in range(9, 25):
             return Piece.ATTACKER
         raise IndexError("Action_column_index out of range")
-
+    
     @staticmethod
     def _num_pieces(piece: Piece) -> int:
         """
@@ -96,10 +96,10 @@ class ActionDecoder:
         if piece == Piece.DEFENDER:
             return DEFENDER_NUM
         raise ValueError("Invalid piece type")
-
+    
     @staticmethod
-    def _get_destination_coordinates(action_index: Tuple[int, int],
-                                     moving_pawn_coords: Tuple[int, int],
+    def _get_destination_coordinates(action_index: Tuple[int, int], 
+                                     moving_pawn_coords: Tuple[int, int], 
                                      state: State) -> Tuple[int, int]:
         """
         Calculate the destination coordinates for the pawn based on the action tensor and the current board state.
@@ -139,7 +139,7 @@ class ActionDecoder:
 
         # Return the move corresponding to the move index
         return valid_moves[move_index]
-
+    
     @staticmethod
     def _get_moving_pawn_coordinates(action_index: Tuple[int, int], state: State) -> Tuple[int, int]:
         """
@@ -176,25 +176,22 @@ class ActionDecoder:
             raise ValueError(f"Piece rank {piece_rank} exceeds available pieces of type {piece_type}.")
 
         return tuple(sorted_indices[piece_rank])
-
+    
     @staticmethod
-    def decode(flat_action_tensor: np.ndarray, state: State) -> Action:
+    def decode(action_index: int, state: State) -> Action:
         """
         Decode the flattened action tensor into a valid Tablut action.
 
         Args:
-            flat_action_tensor (np.ndarray): The flattened action tensor of size 400.
+            action_index (int): The index of the move..
             state (State): The current game state.
 
         Returns:
             Action: The decoded action object.
         """
-        # Find the index of the maximum Q-value in the flattened action tensor
-        flat_index = np.argmax(flat_action_tensor)
-
         # Map flat index to 2D action indices: (action_column_index, move_index)
-        action_column_index = flat_index // 16
-        move_index = flat_index % 16
+        action_column_index = action_index // 16
+        move_index = action_index % 16
 
         # Get the starting coordinates of the pawn being moved
         from_tuple = ActionDecoder._get_moving_pawn_coordinates((action_column_index, move_index), state)

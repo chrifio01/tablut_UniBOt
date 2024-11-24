@@ -10,7 +10,7 @@ env:
   observation_spec:
     shape: [333,]                    # Shape of observation
   action_spec:
-    shape: [25, 16]                    # Shape of action
+    shape: [400, ]                    # Shape of action
   max_episode_steps: 1000         # Maximum steps in an episode
   time_step_spec:                 # Time step specifications
     step_type:                    # Step type (e.g., first, mid, last)
