@@ -1,53 +1,71 @@
 """
-This module defines the DQNAgent class for training a DQN (Deep Q-Network) agent
-using the tf-agents library. The agent interacts with the environment, collects
-trajectories, and stores them in a replay buffer for training.
+This module defines the `DQNAgent` class for implementing a Deep Q-Network (DQN) agent
+using the `tf-agents` library. The agent interacts with an environment, collects
+trajectories, and stores them in a replay buffer for training purposes.
+
+Classes:
+--------
+DQNAgent:
+    Encapsulates the logic for a DQN-based reinforcement learning agent, including
+    interaction with the environment, policy evaluation, and replay buffer management.
 
 Dependencies:
+-------------
 - TensorFlow (`tensorflow`)
-- tf-agents (`tf_agents`)
+- TensorFlow Agents (`tf_agents`)
 - PyYAML (`yaml`)
 """
 
-from tf_agents.environments import tf_py_environment, TFPyEnvironment
-from tf_agents.agents import DqnAgent
-from tf_agents.replay_buffers import TFUniformReplayBuffer
-from tf_agents.trajectories import trajectory
 import tensorflow as tf
-from model.utils.dqn_network import DQN
-import yaml
-
-# Load the configuration from the YAML file
-with open('config/config.yaml', 'r') as file:
-    config = yaml.safe_load(file)
-
-# Extract the DQN configuration
-hidden_layers_num = config['model']['dqn']['hidden_layers_num']
-neurons_per_layer = config['model']['dqn']['neurons_per_layer']
-
+from tf_agents.trajectories import TimeStep
+from tf_agents.environments import TFPyEnvironment
+from tf_agents.agents import DqnAgent
+from tf_agents.replay_buffers.replay_buffer import ReplayBuffer
+from tf_agents.trajectories import trajectory
+from tf_agents.networks.q_network import QNetwork
 
 class DQNAgent:
     """
-    A class to represent a DQN agent.
+    A class to represent a Deep Q-Network (DQN) agent for reinforcement learning.
+
+    This class provides methods for initializing the agent, collecting trajectories 
+    by interacting with the environment, and storing these trajectories in a replay 
+    buffer for future training. It utilizes the `tf-agents` library for implementing 
+    the agent's policies and environment interactions.
 
     Attributes
     ----------
-    env : tf_py_environment.TFPyEnvironment
+    env : TFPyEnvironment
         The TensorFlow environment in which the agent operates.
     agent : DqnAgent
-        The DQN agent.
-    replay_buffer : TFUniformReplayBuffer
-        The replay buffer to store trajectories.
+        The underlying DQN agent from the `tf-agents` library.
+    replay_buffer : ReplayBuffer
+        The replay buffer for storing collected trajectories.
 
     Methods
     -------
-    __init__(env: Environment):
-        Initializes the DQNAgent with the given environment.
-    collect_trajectory(num_episodes=1000):
-        Collects trajectories by interacting with the environment.
+    __init__(tf_env, q_network, optimizer, *, epsilon_fn, target_update_period=2000, 
+             td_errors_loss_fn=tf.keras.losses.Huber(reduction="none"), gamma=0.99, 
+             train_step_counter=tf.Variable(0)):
+        Initializes the DQNAgent with the specified environment, network, and training parameters.
+
+    collect_trajectory(replay_buffer, num_episodes=1000):
+        Collects trajectories by interacting with the environment and stores them 
+        in the provided replay buffer.
     """
 
-    def __init__(self, tf_env: TFPyEnvironment):
+    def __init__(
+        self, 
+        tf_env: TFPyEnvironment, 
+        q_network: QNetwork, 
+        optimizer: tf.compat.v1.train.Optimizer,
+        *,
+        epsilon_fn: callable,
+        target_update_period: int = 2000,
+        td_errors_loss_fn: tf.keras.losses.Loss = tf.keras.losses.Huber(reduction="none"),
+        gamma: float = 0.99,
+        train_step_counter: tf.Variable = tf.Variable(0)
+        ):
         """
         Initializes the DQNAgent with the given environment.
 
@@ -59,50 +77,48 @@ class DQNAgent:
 
         self.env = tf_env
 
-        q_network = DQN(
-            input_tensor_spec=self.env.observation_spec(),
-            action_spec=self.env.action_spec(),
-            shape=(neurons_per_layer,) * hidden_layers_num
-        )
-
-        optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3)
-        train_step = tf.Variable(0)
-        update_period = 4
-        epsilon_fn = tf.keras.optimizers.schedules.PolynomialDecay(
-            initial_learning_rate=1.0,
-            decay_steps=250000 // update_period,
-            end_learning_rate=0.01)
-
         self.agent = DqnAgent(
             self.env.time_step_spec(),
             self.env.action_spec(),
             q_network=q_network,
             optimizer=optimizer,
-            target_update_period=2000,
-            td_errors_loss_fn=tf.keras.losses.Huber(reduction="none"),
-            gamma=0.99,
-            train_step_counter=train_step, epsilon_greedy=lambda: epsilon_fn(train_step)
-        )
-
-        self.replay_buffer = TFUniformReplayBuffer(
-            data_spec=self.agent.collect_data_spec,
-            batch_size=tf_env.batch_size,
-            max_length=1000000
+            target_update_period=target_update_period,
+            td_errors_loss_fn=td_errors_loss_fn,
+            gamma=gamma,
+            train_step_counter=train_step_counter,
+            epsilon_greedy=lambda: epsilon_fn(train_step_counter)
         )
 
         self.agent.initialize()
 
-    def collect_trajectory(self, num_episodes=1000):
+    def collect_trajectory(self, replay_buffer: ReplayBuffer, num_episodes=1000):
         """
-        Collects trajectories by interacting with the environment.
+        Initializes the DQNAgent with the given environment, Q-network, and optimization settings.
 
         Parameters
         ----------
-        num_episodes : int, optional
-            The number of episodes to collect trajectories for (default is 1000).
+        tf_env : TFPyEnvironment
+            The environment in which the agent will operate. This environment must be compatible 
+            with TensorFlow and follow the `tf-agents` environment specifications.
+        q_network : QNetwork
+            The Q-network to approximate the Q-value function. This network maps observations 
+            to predicted Q-values for each action.
+        optimizer : tf.compat.v1.train.Optimizer
+            The optimizer used to train the Q-network.
+        epsilon_fn : callable
+            A function that returns the epsilon value for the epsilon-greedy policy, 
+            allowing exploration during training.
+        target_update_period : int, optional
+            The number of steps before updating the target network (default is 2000).
+        td_errors_loss_fn : tf.keras.losses.Loss, optional
+            The loss function for TD-error minimization (default is Huber loss with "none" reduction).
+        gamma : float, optional
+            The discount factor for future rewards (default is 0.99).
+        train_step_counter : tf.Variable, optional
+            A counter to track training steps (default is a new `tf.Variable` initialized to 0).
         """
-        for episode in range(num_episodes):
-            time_step = self.env.reset()  # Reset the environment
+        for _ in range(num_episodes):
+            time_step: TimeStep = self.env.reset()  # Reset the environment
 
             while not time_step.is_last():
                 # The agent collects an action using its policy
@@ -113,7 +129,7 @@ class DQNAgent:
                 traj = trajectory.from_transition(time_step, action_step, next_time_step)
 
                 # Add the transition to the replay buffer
-                self.replay_buffer.add_batch(traj)
+                replay_buffer.add_batch(traj)
 
                 # Update the time_step for the next loop
                 time_step = next_time_step
