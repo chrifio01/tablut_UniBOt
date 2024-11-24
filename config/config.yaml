@@ -5,26 +5,15 @@ model:
     hidden_layers_num: 3          # Number of hidden layers in the neural network
     neurons_per_layer: 48         # Number of neurons in each hidden layer
     activation: relu              # Activation function (e.g., relu, tanh)
-  replay_memory:
-    buffer_size: 100000            # Size of the replay memory
-    batch_size: 64                  # Batch size for training
 
 env:
   observation_spec:
     shape: [333,]                    # Shape of observation
   action_spec:
     shape: [400, ]                    # Shape of action
-  discount_factor: 0.99
   max_episode_steps: 1000         # Maximum steps in an episode
-  time_step_spec:                 # Time step specifications
-    step_type:                    # Step type (e.g., first, mid, last)
-      shape: []
-    reward:                       # Reward specification
-      shape: []
-    discount:                     # Discount factor specification
-      shape: []
 
 replay_buffer:
-  replay_buffer_capacity: 100000
+  capacity: 100000
   batch_size: 64
-  min_replay_buffer_size: 1000
+  min_size: 1000
