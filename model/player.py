@@ -173,8 +173,6 @@ class DQNPlayer(AbstractPlayer):
 
             # Sample experience and log shapes
             experience, _ = next(iterator)
-            logger.debug(f"Sampled experience shapes: {tf.nest.map_structure(lambda t: t.shape, experience)}")
-            logger.debug(f"Sampled experience dtypes: {tf.nest.map_structure(lambda t: t.dtype, experience)}")
 
             # Ensure tensors are float32 before training
             train_loss = self._agent.agent.train(experience).loss
