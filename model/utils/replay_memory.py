@@ -6,7 +6,7 @@ from tf_agents.agents.dqn.dqn_agent import DqnAgent
     
 class ReplayMemory:
     
-    def __init__(self, agent: DqnAgent, environment: PyEnvironment, memory_capacity: int):
+    def __init__(self, agent: DqnAgent, environment: PyEnvironment, memory_capacity: int, batch_size: int):
         self._agent = agent
         self._environment = environment
         self._memory_capacity = memory_capacity
@@ -16,6 +16,7 @@ class ReplayMemory:
             batch_size=self._environment.batch_size,
             max_length=self._memory_capacity
         )
+        self._batch_size = batch_size
 
     def collect_step(self, policy):
         time_step = self._environment.current_time_step()

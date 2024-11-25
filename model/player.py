@@ -94,6 +94,7 @@ class DQNPlayer(AbstractPlayer):
             self._agent.agent,
             self._env,
             memory_capacity=CONFIG["replay_buffer"]["capacity"],
+            batch_size=CONFIG["replay_buffer"]["batch_size"],
             )
     
     def fit(self, state: State, *args, **kwargs) -> Action:
