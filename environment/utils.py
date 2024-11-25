@@ -175,7 +175,7 @@ class ActionDecoder:
         if piece_rank >= len(sorted_indices):
             raise ValueError(f"Piece rank {piece_rank} exceeds available pieces of type {piece_type}.")
 
-        return tuple(sorted_indices[piece_rank])
+        return tuple(sorted_indices[int(piece_rank)])
     
     @staticmethod
     def decode(action_index: int, state: State) -> Action:
