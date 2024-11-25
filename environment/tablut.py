@@ -19,6 +19,7 @@ import random
 import copy
 
 import numpy as np
+import tensorflow as tf
 from tf_agents.environments.py_environment import PyEnvironment
 from tf_agents.specs import ArraySpec, array_spec
 from tf_agents.trajectories import time_step as ts
@@ -241,7 +242,7 @@ class Environment(PyEnvironment):
         return ts.transition(
             state_to_tensor(self.current_state, self._trainer.color),
             reward=trainer_reward,
-            discount=self._discount_factor
+            discount=tf.constant(self._discount_factor, dtype=tf.float32)
         )
 
     def _is_it_a_tie(self) -> bool:
