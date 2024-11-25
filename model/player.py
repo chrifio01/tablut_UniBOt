@@ -98,44 +98,36 @@ class DQNPlayer(AbstractPlayer):
     
     def fit(self, state: State, *args, **kwargs) -> Action:
         """
-        Predicts the best action for the given state using the DQN.
+        Predict the best action for a given state using the DQN.
 
-        This method converts the given state into a format suitable for the Q-network,
-        uses the Q-network to predict Q-values for all possible actions, and selects
-        the action with the highest Q-value.
+        This method processes the input game state, assigns it to the environment's 
+        current time step, and uses the policy to predict the best action.
 
-        Args
-        ----
-        state : State
-            The current game state.
+        Args:
+            state (State): The current game state.
+            *args: Additional positional arguments (not used).
+            **kwargs: Additional keyword arguments (not used).
 
-        *args : tuple
-            Additional positional arguments.
-
-        **kwargs : dict
-            Additional keyword arguments.
-
-        Returns
-        -------
-        Action
-            The action chosen by the DQN based on the Q-values.
+        Returns:
+            Action: The action chosen by the DQN based on predicted Q-values.
         """
-        # Convert the state to a TensorFlow tensor
-        assert self._color is not None
-        observation = state_to_tensor(state, self._color)  # Convert to tensor with shape (333,)
+        assert self._color is not None, "Player color must be set before calling fit."
 
-        # Create a time step for the agent
-        time_step = ts.transition(
-            observation=observation,
-            reward=tf.constant(0.0, dtype=tf.float32),  # Placeholder reward
-            discount=tf.constant(1.0, dtype=tf.float32),  # Placeholder discount
+        # Convert the state into a tensor suitable for the model
+        observation = state_to_tensor(state, self._color)
+
+        # Ensure observation has a batch dimension
+        batched_observation = tf.expand_dims(observation, axis=0)  # Add batch dimension
+
+        # Use the agent's policy to predict the action from the current environment state
+        action_step = self._agent.agent.policy.action(
+            ts.restart(batched_observation)  # Wrap in TimeStep with batch dimension
         )
 
-        # Use the agent's policy to predict the best action
-        action_step = self._agent.agent.policy.action(time_step)
+        # Decode the selected action into a format usable by the environment
+        action = ActionDecoder.decode(action_step.action.numpy()[0], state)
 
-        # Decode and return the chosen action
-        return ActionDecoder.decode(action_step.action.numpy()[0], state)
+        return action
     
     def train(self):
         logger.debug("Initializing for training...")
