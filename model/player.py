@@ -4,23 +4,22 @@
 
 import os
 
+import tensorflow as tf
 from tf_agents.trajectories import time_step as ts
+from tf_agents.policies import random_tf_policy
 
 from environment import Environment
 from model.utils.dqn_agent import DQNAgent
 from shared.consts import INITIAL_STATE
 from shared.history import History
 from shared.random_player import RandomPlayer
-from shared.utils import strp_state, Color, State, Action
-from .utils.replay_memory import ReplayMemory
+from shared.utils import strp_state, Color, State, Action, parse_yaml, AbstractPlayer
 from environment.utils import state_to_tensor, ActionDecoder
-
-from .utils.dqn_agent import DQNAgent
 from shared.loggers import logger, training_logger
-from tf_agents.policies import random_tf_policy
-import tensorflow as tf
+
+from .utils.replay_memory import ReplayMemory
+from .utils.dqn_agent import DQNAgent
 from .utils.dqn_network import DQN
-from shared.utils import parse_yaml, AbstractPlayer
 
 _config_file_path = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -130,15 +129,63 @@ class DQNPlayer(AbstractPlayer):
 
         return action
     
+    def evaluate(self, num_episodes=10):
+        """
+        Evaluate the agent's performance by running it in the environment for a fixed number of episodes.
+        
+        Args:
+            num_episodes (int): Number of episodes to run for evaluation.
+
+        Returns:
+            float: The average reward obtained during evaluation.
+        """
+        training_logger.debug("Starting policy evaluation...")
+
+        total_reward = 0.0
+        for episode in range(num_episodes):
+            time_step = self._env.reset()
+            episode_reward = 0.0
+
+            while not time_step.is_last():
+                action_step = self._agent.agent.policy.action(time_step)
+                time_step = self._env.step(action_step.action)
+                episode_reward += time_step.reward.numpy()
+
+            training_logger.debug(f"Episode {episode + 1}: Reward = {episode_reward}")
+            total_reward += episode_reward
+
+        # Compute the average reward and convert it to a scalar
+        average_reward = total_reward / num_episodes
+        training_logger.debug(f"Policy evaluation complete. Average Reward = {float(average_reward):.2f}")
+        return float(average_reward)
+    
     def train(self):
+        # Init training parameters
         training_logger.debug("Initializing for training...")
         num_iterations = HYPER_PARAMS["training"]["iterations"]
         collect_steps_per_iteration = HYPER_PARAMS["training"]["collect_steps_per_iteration"]
-        log_interval = HYPER_PARAMS["training"]["log_interval"]
+        log_interval = CONFIG["training"]["log_interval"]
+        eval_interval = CONFIG["training"]["eval_interval"]
+        initial_dataset_size = HYPER_PARAMS["training"]["initial_dataset_size"]
+        sample_batch_size = CONFIG["replay_buffer"]["sample_batch_size"]
+        checkpoint_dir = os.path.join(
+            os.path.dirname(os.path.abspath(_config_file_path)),
+            CONFIG["training"]["checkpoint_dir"]
+        )
+        training_logger.debug("porca madonna")
+        training_logger.debug(checkpoint_dir)
+        
+        # Ensure the checkpoint directory exists
+        if not os.path.exists(checkpoint_dir):
+            os.makedirs(checkpoint_dir)
+        
+        # Setup checkpointing
+        checkpoint = tf.train.Checkpoint(agent=self._agent.agent)
+        checkpoint_manager = tf.train.CheckpointManager(checkpoint, checkpoint_dir, max_to_keep=5)
 
         # Collect initial data
         training_logger.debug("Collecting initial data...")
-        for _ in range(HYPER_PARAMS["training"]["initial_dataset_size"]):
+        for _ in range(initial_dataset_size):
             self._replay_buffer.collect_step(
                 random_tf_policy.RandomTFPolicy(
                     self._env.time_step_spec(), self._env.action_spec()
@@ -150,7 +197,7 @@ class DQNPlayer(AbstractPlayer):
         training_logger.debug("Creating replay buffer dataset...")
         dataset = self._replay_buffer._buffer.as_dataset(
             num_parallel_calls=3,
-            sample_batch_size=CONFIG["replay_buffer"]["batch_size"],
+            sample_batch_size=sample_batch_size,
             num_steps=2
         ).prefetch(3)     
 
@@ -173,6 +220,17 @@ class DQNPlayer(AbstractPlayer):
 
             if step % log_interval == 0:
                 training_logger.debug(f"Step {step}: Loss = {train_loss}")
+                
+            # Save checkpoints
+            if step % eval_interval == 0:
+                checkpoint_manager.save()
+                training_logger.debug(f"Checkpoint saved at step {step}.")
+                
+                # Evaluate the policy
+                average_reward = self.evaluate()
+                training_logger.info(f"Evaluation at step {step}: Average Reward = {average_reward:.2f}")
+                
+        training_logger.debug("Training completed.")
             
     def test(self, num_episodes = 1000):
         """
