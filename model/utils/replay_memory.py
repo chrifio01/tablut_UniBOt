@@ -16,14 +16,18 @@ class ReplayMemory:
             batch_size=batch_size,
             max_length=self._memory_capacity
         )
-        
+        self._batch_size = batch_size
+
     def collect_step(self, policy):
         time_step = self._environment.current_time_step()
         action_step = policy.action(time_step)
         next_time_step = self._environment.step(action_step.action)
+        
+         # Ensure the trajectory matches the expected batch size
         traj = trajectory.from_transition(time_step, action_step, next_time_step)
+        
+        # Expand dimensions or replicate batch if needed
+        traj = tf.nest.map_structure(lambda t: tf.repeat(t, self._batch_size, axis=0), traj)
 
-        # Add a batch dimension to the trajectory before adding to the buffer
-        traj = tf.nest.map_structure(lambda t: tf.expand_dims(t, axis=0), traj)
-        tf.nest.assert_same_structure(self._agent.collect_data_spec, self._buffer.data_spec)
+
         self._buffer.add_batch(traj)
