@@ -16,7 +16,7 @@ from .utils.replay_memory import ReplayMemory
 from environment.utils import state_to_tensor, ActionDecoder
 
 from .utils.dqn_agent import DQNAgent
-from shared.loggers import logger
+from shared.loggers import logger, training_logger
 from tf_agents.policies import random_tf_policy
 import tensorflow as tf
 from .utils.dqn_network import DQN
@@ -40,8 +40,10 @@ HYPER_PARAMS = parse_yaml(_hyperparams_file_path)
 
 class DQNPlayer(AbstractPlayer):
     
-    def __init__(self, color: Color):
+    def __init__(self, color: Color, *, training_mode: bool = False):
         super().__init__()
+        if training_mode:
+            logger.disabled = True
         self._name = "DQNPlayer"
         self._color = color
         
@@ -130,23 +132,23 @@ class DQNPlayer(AbstractPlayer):
         return action
     
     def train(self):
-        logger.debug("Initializing for training...")
+        training_logger.debug("Initializing for training...")
         num_iterations = HYPER_PARAMS["training"]["iterations"]
         collect_steps_per_iteration = HYPER_PARAMS["training"]["collect_steps_per_iteration"]
         log_interval = HYPER_PARAMS["training"]["log_interval"]
 
         # Collect initial data
-        logger.debug("Collecting initial data...")
+        training_logger.debug("Collecting initial data...")
         for _ in range(HYPER_PARAMS["training"]["initial_dataset_size"]):
             self._replay_buffer.collect_step(
                 random_tf_policy.RandomTFPolicy(
                     self._env.time_step_spec(), self._env.action_spec()
                 )
             )
-        logger.debug("Initial data collection complete.")
+        training_logger.debug("Initial data collection complete.")
 
         # Create dataset
-        logger.debug("Creating replay buffer dataset...")
+        training_logger.debug("Creating replay buffer dataset...")
         dataset = self._replay_buffer._buffer.as_dataset(
             num_parallel_calls=3,
             sample_batch_size=CONFIG["replay_buffer"]["batch_size"],
@@ -154,12 +156,12 @@ class DQNPlayer(AbstractPlayer):
         ).prefetch(3)     
 
         iterator = iter(dataset)
-        logger.debug("Dataset created successfully.")
+        training_logger.debug("Dataset created successfully.")
 
         # Train the agent
-        logger.debug("Starting training...")
+        training_logger.debug("Starting training...")
         for i in range(num_iterations):
-            logger.debug(f"Iteration {i}...")
+            training_logger.debug(f"Iteration {i}...")
             for _ in range(collect_steps_per_iteration):
                 self._replay_buffer.collect_step(self._agent.agent.collect_policy)
 
@@ -171,7 +173,7 @@ class DQNPlayer(AbstractPlayer):
             step = self._agent.agent.train_step_counter.numpy()
 
             if step % log_interval == 0:
-                logger.debug(f"Step {step}: Loss = {train_loss}")
+                training_logger.debug(f"Step {step}: Loss = {train_loss}")
             
     def test(self, num_episodes = 1000):
         """
