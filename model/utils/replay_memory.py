@@ -13,7 +13,7 @@ class ReplayMemory:
         
         self._buffer = TFUniformReplayBuffer(
             data_spec=agent.collect_data_spec,
-            batch_size=batch_size,
+            batch_size=self._environment.batch_size,
             max_length=self._memory_capacity
         )
         self._batch_size = batch_size
@@ -25,9 +25,5 @@ class ReplayMemory:
         
          # Ensure the trajectory matches the expected batch size
         traj = trajectory.from_transition(time_step, action_step, next_time_step)
-        
-        # Expand dimensions or replicate batch if needed
-        traj = tf.nest.map_structure(lambda t: tf.repeat(t, self._batch_size, axis=0), traj)
-
 
         self._buffer.add_batch(traj)

@@ -34,7 +34,7 @@ def state_to_tensor(state: State, player_color: Color) -> np.ndarray:
         featurized_state.turn_input,
         featurized_state.white_input,
         featurized_state.black_input,
-    ]).astype(np.float16)
+    ]).astype(np.float32)
     
 class ActionDecoder:
     """

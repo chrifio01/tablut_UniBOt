@@ -81,7 +81,7 @@ class Environment(PyEnvironment):
         observation_spec_shape: Tuple[int, int],
         action_spec_shape: Tuple[int, int],
         discount_factor: float,
-        standard_dtype: np.dtype = np.float16,
+        standard_dtype: np.dtype = np.float32,
         reward_function=None,
         opponent=None,
         action_min: int = 0,

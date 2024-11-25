@@ -124,9 +124,6 @@ class DQNPlayer(AbstractPlayer):
         assert self._color is not None
         observation = state_to_tensor(state, self._color)  # Convert to tensor with shape (333,)
 
-        # Add a batch dimension to the observation
-        observation = tf.expand_dims(observation, axis=0)  # Shape becomes (1, 333)
-
         # Create a time step for the agent
         time_step = ts.transition(
             observation=observation,

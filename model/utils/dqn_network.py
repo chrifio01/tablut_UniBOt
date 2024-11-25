@@ -33,7 +33,7 @@ def DQN(
     activation_fn=tf.keras.activations.relu,
     kernel_initializer=None,
     batch_squash=True,
-    dtype=tf.float16,
+    dtype=tf.float32,
     q_layer_activation_fn=None,
     name='DQNNetwork'
     ):
