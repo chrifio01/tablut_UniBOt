@@ -93,8 +93,7 @@ class DQNPlayer(AbstractPlayer):
         self._replay_buffer = ReplayMemory(
             self._agent.agent,
             self._env,
-            memory_capacity=CONFIG["replay_buffer"]["capacity"],
-            batch_size=CONFIG["replay_buffer"]["batch_size"],
+            memory_capacity=CONFIG["replay_buffer"]["capacity"]
             )
     
     def fit(self, state: State, *args, **kwargs) -> Action:
@@ -173,8 +172,6 @@ class DQNPlayer(AbstractPlayer):
             os.path.dirname(os.path.abspath(_config_file_path)),
             CONFIG["training"]["checkpoint_dir"]
         )
-        training_logger.debug("porca madonna")
-        training_logger.debug(checkpoint_dir)
         
         # Ensure the checkpoint directory exists
         if not os.path.exists(checkpoint_dir):
