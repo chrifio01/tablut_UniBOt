@@ -1,5 +1,16 @@
+from shared import strp_state, INITIAL_STATE
+
+from shared import Color, State
 from model.player import DQNPlayer
-from shared import Color
+
+# Create an instance of DQNPlayer
+player = DQNPlayer(color=Color.WHITE)
+
+# Predict the best action for the given state
+predicted_action = player.fit(strp_state(INITIAL_STATE))
+
+# Print the predicted action
+print(f"Predicted action: {predicted_action}")
 
 """
 Entrypoint for the TablutClient module.
@@ -32,11 +43,3 @@ if __name__ == '__main__':
     except Exception as e:
         logger.error("An error occurred: %s", e)
 """
-
-
-player = DQNPlayer(color=Color.WHITE)
-
-num_episodes = 5
-total_rewards = player.test(num_episodes)
-
-print(f"Total rewards over {num_episodes} episodes: {total_rewards}")
