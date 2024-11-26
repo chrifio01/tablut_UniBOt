@@ -92,7 +92,7 @@ class Turn(Enum):
     BLACK_TURN = 'B'
     WHITE_TURN = 'W'
     BLACK_WIN = 'BW'
-    WHITE_WIN = 'WB'
+    WHITE_WIN = 'WW'
     DRAW = 'D'
 
 
