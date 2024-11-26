@@ -9,7 +9,7 @@ from tf_agents.trajectories import time_step as ts
 from tf_agents.policies import random_tf_policy
 
 from environment import Environment, state_to_tensor, ActionDecoder
-from shared import INITIAL_STATE, History, RandomPlayer, strp_state, Color, State, Action, parse_yaml, AbstractPlayer, logger, training_logger
+from shared import INITIAL_STATE, History, RandomPlayer, strp_state, Color, State, Action, parse_yaml, AbstractPlayer, logger, training_logger, env_logger
 
 from .utils import ReplayMemory, DQNAgent, DQN
 
@@ -64,10 +64,12 @@ class DQNPlayer(AbstractPlayer):
         ```
     """
     
-    def __init__(self, color: Color, *, training_mode: bool = False):
+    def __init__(self, color: Color, *, training_mode: bool = False, disable_env_logger = False):
         super().__init__()
         if training_mode:
             logger.disabled = True
+        env_logger.disabled = disable_env_logger
+        
         self._name = "DQNPlayer"
         self._color = color
         

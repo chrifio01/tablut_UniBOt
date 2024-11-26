@@ -26,3 +26,4 @@ logging.config.dictConfig(LOGGING_CONFIG)
 # Create a logger using the configured dictionary
 logger = logging.getLogger('tablut_logger')
 training_logger = logging.getLogger('training_logger')
+env_logger = logging.getLogger('env_logger')

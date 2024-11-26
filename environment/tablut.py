@@ -33,7 +33,7 @@ from shared.move_checker import MoveChecker
 from shared.exceptions import InvalidAction
 from shared.heuristic import heuristic
 from shared.random_player import RandomPlayer
-from shared.loggers import logger
+from shared.loggers import env_logger
 from environment.utils import ActionDecoder
 from .utils import state_to_tensor
 
@@ -89,34 +89,34 @@ class Environment(PyEnvironment):
     ):
         super().__init__()
         # Game and trainer settings
-        logger.debug("Initializing environment...")
+        env_logger.debug("Initializing environment...")
         self.current_state = current_state
-        logger.debug(self.current_state.board)
+        env_logger.debug(self.current_state.board)
         self.history = history
         self._trainer = trainer
         self._opponent = opponent or self._init_opponent()
         self.reward_function = reward_function or heuristic
         self.state_frequency = {}
         self._set_trainer_color()
-        logger.debug("Trainer color: %s\tOpponent color: %s", self._trainer.color, self._opponent.color)
+        env_logger.debug("Trainer color: %s\tOpponent color: %s", self._trainer.color, self._opponent.color)
 
         # Environment configuration
         self._observation_spec_shape = observation_spec_shape
-        logger.debug("observation_spec shape: %s", self._observation_spec_shape)
+        env_logger.debug("observation_spec shape: %s", self._observation_spec_shape)
         self._action_spec_shape = action_spec_shape
-        logger.debug("action_spec shape: %s", self._action_spec_shape)
+        env_logger.debug("action_spec shape: %s", self._action_spec_shape)
         self._standard_dtype = standard_dtype
         self._discount_factor = discount_factor
-        logger.debug("discount_factor: %s", self._discount_factor)
+        env_logger.debug("discount_factor: %s", self._discount_factor)
         self._action_min = action_min
         self._action_max = action_max
 
         # Auxiliary variables
         self._episode_ended = False
         self._current_match_id = self._create_match_id()
-        logger.debug("Match ID: %s", self._current_match_id)
-        logger.debug("Environment initialized.")
-        logger.debug("Initializing match...")
+        env_logger.debug("Match ID: %s", self._current_match_id)
+        env_logger.debug("Environment initialized.")
+        env_logger.debug("Initializing match...")
         self._initialize_match()
 
     def get_info(self):
@@ -180,16 +180,16 @@ class Environment(PyEnvironment):
         self.history.matches[self._current_match_id] = Match(
             white_player=white_player.name, black_player=black_player.name, outcome=None, turns=[]
         )
-        logger.debug("Initialized history match with id: %s", self._current_match_id)
-        logger.debug("Trainer color: %s\tOpponent color: %s", self._trainer.color, self._opponent.color)
-        logger.debug("First to move: %s", self._trainer.name if self._trainer.color == Color.WHITE else self._opponent.name)
+        env_logger.debug("Initialized history match with id: %s", self._current_match_id)
+        env_logger.debug("Trainer color: %s\tOpponent color: %s", self._trainer.color, self._opponent.color)
+        env_logger.debug("First to move: %s", self._trainer.name if self._trainer.color == Color.WHITE else self._opponent.name)
         # if opponent is the white player, let him perform the move
         if self._opponent.color == Color.WHITE:
             opponent_action = self._perform_opponent_turn()
             self.current_state.turn = self._get_outcome()
-            logger.debug("Outcome: %s", self.current_state.turn)
+            env_logger.debug("Outcome: %s", self.current_state.turn)
             if self.current_state.turn is None:
-                logger.debug("Switching turn...")
+                env_logger.debug("Switching turn...")
                 self._switch_and_validate_turn(opponent_action)
             else:
                 self._end_match()
@@ -204,7 +204,7 @@ class Environment(PyEnvironment):
 
     def _reset(self) -> TimeStep:
         """Reset the environment to the initial state."""
-        logger.debug("Resetting environment...")
+        env_logger.debug("Resetting environment...")
         self.current_state = strp_state(INITIAL_STATE)
         self._episode_ended = False
         self._current_match_id = self._create_match_id()
@@ -216,30 +216,30 @@ class Environment(PyEnvironment):
 
     def _step(self, action: int) -> TimeStep:
         """Advance the environment by one step."""
-        logger.debug("Episode ended: %s", self._episode_ended)
+        env_logger.debug("Episode ended: %s", self._episode_ended)
         if self._episode_ended:
             return self._reset()
 
         decoded_action = ActionDecoder.decode(action, self.current_state)
         # Update state and get trainer's reward
-        logger.debug("Updating state with action: %s\n", decoded_action)
+        env_logger.debug("Updating state with action: %s\n", decoded_action)
         trainer_reward = self._update_state(decoded_action)
 
         # Check termination conditions
-        logger.debug("Checking termination condition...")
+        env_logger.debug("Checking termination condition...")
         if self._episode_ended:
-            logger.debug("Episode ended")
+            env_logger.debug("Episode ended")
             # check for invalid action
             if trainer_reward == INVALID_ACTION_PUNISHMENT:
                 final_reward = INVALID_ACTION_PUNISHMENT
             else:
                 final_reward = self._assign_termination_reward()
-            logger.debug("Final reward: %s", final_reward)
+            env_logger.debug("Final reward: %s", final_reward)
             return ts.termination(
                 state_to_tensor(self.current_state, self._trainer.color), reward=final_reward
             )
 
-        logger.debug("Continuing with state:\n%s\tReward: %s", self.current_state, trainer_reward)
+        env_logger.debug("Continuing with state:\n%s\tReward: %s", self.current_state, trainer_reward)
 
         # Continue the episode
         return ts.transition(
@@ -275,7 +275,7 @@ class Environment(PyEnvironment):
 
     def _get_outcome(self):
         """Determine the outcome of the match."""
-        logger.debug("Calculating outcome...")
+        env_logger.debug("Calculating outcome...")
         if self._did_black_win():
             return Turn.BLACK_WIN
         if self._did_white_win():
@@ -292,24 +292,24 @@ class Environment(PyEnvironment):
         """Update the match history."""
         white_player = self._opponent if self._opponent.color == Color.WHITE else self._trainer
         black_player = self._opponent if self._opponent.color == Color.BLACK else self._trainer
-        logger.debug("Updating history with match id: %s...", match_id)
+        env_logger.debug("Updating history with match id: %s...", match_id)
         self.history.update_history(match_id, white_player.name, black_player.name, copy.deepcopy(state), action, reward)
-        logger.debug("History updated:\n%s", self.history.matches[match_id])
+        env_logger.debug("History updated:\n%s", self.history.matches[match_id])
 
     def _update_state(self, move: Action):
         """Update the state with a given move."""
         reward = self._calculate_rewards(copy.deepcopy(self.current_state), move)
 
         if reward != INVALID_ACTION_PUNISHMENT:
-            logger.debug("Calculated reward: %s", reward)
+            env_logger.debug("Calculated reward: %s", reward)
             self._update_history(self._current_match_id, self.current_state, move, reward)
             self.current_state.board.update_pieces(move)
-            logger.debug("Updated Board:\n%s", self.current_state.board)
+            env_logger.debug("Updated Board:\n%s", self.current_state.board)
             self._handle_turn_and_outcome(move)
             return reward
 
         assert reward == INVALID_ACTION_PUNISHMENT
-        logger.debug("Invalid move by the Trainer: \n%s", move)
+        env_logger.debug("Invalid move by the Trainer: \n%s", move)
         self._update_history(self._current_match_id, self.current_state, move, reward)
         self._episode_ended = True  # no reward assigned cause it was player fault
         self.current_state.turn = Turn.BLACK_WIN if self._trainer.color.value == Turn.WHITE_TURN.value else Turn.WHITE_WIN
@@ -318,14 +318,14 @@ class Environment(PyEnvironment):
 
     def _handle_turn_and_outcome(self, move: Action):
         """Handle the turn progression and match outcome."""
-        logger.debug("Handling turn...")
+        env_logger.debug("Handling turn...")
         self.current_state.turn = self._get_outcome()
-        logger.debug("Outcome: %s", self.current_state.turn)
+        env_logger.debug("Outcome: %s", self.current_state.turn)
         if self.current_state.turn is None:
             self._switch_and_validate_turn(move)
             opponent_action = self._perform_opponent_turn()
             self.current_state.turn = self._get_outcome()
-            logger.debug("Outcome: %s", self.current_state.turn)
+            env_logger.debug("Outcome: %s", self.current_state.turn)
             if self.current_state.turn is None:
                 self._switch_and_validate_turn(opponent_action)
             else:
@@ -338,36 +338,36 @@ class Environment(PyEnvironment):
         self.current_state.turn = (
             Turn.BLACK_TURN if move.turn == Turn.WHITE_TURN else Turn.WHITE_TURN
         )
-        logger.debug("It's %s turn", self._trainer.name if self.current_state.turn.value == self._trainer.color.value else self._opponent.name)
+        env_logger.debug("It's %s turn", self._trainer.name if self.current_state.turn.value == self._trainer.color.value else self._opponent.name)
 
     def _perform_opponent_turn(self):
         """Handle the opponent's turn."""
         opponent_action = self._opponent.fit(self.current_state)
         try:
             MoveChecker.is_valid_move(self.current_state, opponent_action)
-            logger.debug("Opponent move:\n%s",opponent_action)
+            env_logger.debug("Opponent move:\n%s",opponent_action)
             self._update_history(self._current_match_id, self.current_state, opponent_action, None)
             self.current_state.board.update_pieces(opponent_action)
-            logger.debug("Updated Board:\n%s", self.current_state.board)
+            env_logger.debug("Updated Board:\n%s", self.current_state.board)
             return opponent_action
         except InvalidAction:
-            logger.debug("Opponent performed an invalid action: \n%s", opponent_action)
+            env_logger.debug("Opponent performed an invalid action: \n%s", opponent_action)
             self._update_history(self._current_match_id, self.current_state, opponent_action, None)
             self._reset()
 
     def _end_match(self):
         """Handle the end of the match."""
-        logger.debug("Ending the match...")
+        env_logger.debug("Ending the match...")
         self._episode_ended = True
         final_reward = self._assign_termination_reward()
-        logger.info("Final reward: %s", final_reward)
+        env_logger.info("Final reward: %s", final_reward)
         self.history.set_outcome(self._current_match_id, self.current_state.turn)
         self._update_history(self._current_match_id, self.current_state, None, final_reward)
 
     def _assign_termination_reward(self) -> float:
         """Assign the final reward based on the match outcome."""
         outcome_color = winner_color(self.current_state.turn)
-        logger.debug("Outcome color: %s", outcome_color)
+        env_logger.debug("Outcome color: %s", outcome_color)
         if outcome_color == self._opponent.color:
             return float(LOSS_REWARD)
         if outcome_color == self._trainer.color:

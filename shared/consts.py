@@ -89,6 +89,11 @@ LOGGING_CONFIG = {
             'handlers': ['training_file', 'console'],
             'propagate': False,
         },
+        'env_logger': {
+            'level': 'DEBUG',
+            'handlers': ['training_file', 'console'],
+            'propagate': False,
+        },
     },
 }
 

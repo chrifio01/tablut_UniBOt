@@ -22,7 +22,7 @@ if __name__ == '__main__':
             'server_ip': SERVER_IP,
             'port': int(WEBSOCKET_PORT)
         }
-        player = DQNPlayer(color=strp_color(PLAYER_COLOR))
+        player = DQNPlayer(color=strp_color(PLAYER_COLOR), disable_env_logger=True)
         client = Client(player=player, settings=settings)
         client.main()
     except Exception as e:
