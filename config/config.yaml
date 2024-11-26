@@ -15,5 +15,10 @@ env:
 
 replay_buffer:
   capacity: 100000
-  batch_size: 64
+  sample_batch_size: 64
   min_size: 1000
+
+training:
+  log_interval: 2
+  eval_interval: 10
+  checkpoint_dir: ../training/checkpoints/
