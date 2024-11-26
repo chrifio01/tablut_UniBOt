@@ -117,13 +117,15 @@ ALPHA_B, BETA_B, GAMMA_B, THETA_B, EPSILON_B = [0.958245251997756, 0.25688393654
 
 WIN_TILES = [(0,1),(0,2),(0,6),(0,7),(1,0),(2,0),(6,0),(7,0),(8,1),(8,2),(8,6),(8,7),(1,8),(2,8),(6,8),(7,8)]
 
-WIN_REWARD = 999
+# These lines are defining constants for rewards and punishments in the Tablut game. Here's what each
+# constant represents:
+WIN_REWARD = 100
 
-LOSS_REWARD = - 999
+LOSS_REWARD = - 100
 
-DRAW_REWARD = - 99
+DRAW_REWARD = - 40
 
-INVALID_ACTION_PUNISHMENT = - 9999
+INVALID_ACTION_PUNISHMENT = - 300
 
 DEFENDER_NUM = 8
 
