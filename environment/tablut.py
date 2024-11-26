@@ -94,10 +94,15 @@ class Environment(PyEnvironment):
         env_logger.debug(self.current_state.board)
         self.history = history
         self._trainer = trainer
-        self._opponent = opponent or self._init_opponent()
+        if trainer.color and opponent:
+            self._opponent = opponent or self._init_opponent()
+            self._opponent._color = Color.WHITE if self._trainer.color == Color.BLACK else Color.BLACK
+        else:
+            self._opponent = self._init_opponent()
         self.reward_function = reward_function or heuristic
         self.state_frequency = {}
-        self._set_trainer_color()
+        if self._trainer.color is None:
+            self._set_trainer_color()
         env_logger.debug("Trainer color: %s\tOpponent color: %s", self._trainer.color, self._opponent.color)
 
         # Environment configuration
