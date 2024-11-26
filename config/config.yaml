@@ -2,7 +2,7 @@ version: "1.0.0"
 
 model:
   dqn:
-    shape: [1024, 512, 512, 1024]
+    shape: [1024, 512, 512, 256]
     activation: relu              # Activation function (e.g., relu, tanh)
 
 env:
