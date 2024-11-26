@@ -90,7 +90,7 @@ class DQNPlayer(AbstractPlayer):
         )
         self._env = self._env.to_TFPy()
         
-        shape = (CONFIG["model"]["dqn"]["neurons_per_layer"], CONFIG["model"]["dqn"]["hidden_layers_num"])
+        shape = CONFIG["model"]["dqn"]["shape"]
         
         self._q_network = DQN(
             input_tensor_spec=self._env.observation_spec(),

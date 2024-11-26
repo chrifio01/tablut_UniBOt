@@ -2,8 +2,7 @@ version: "1.0.0"
 
 model:
   dqn:
-    hidden_layers_num: 3          # Number of hidden layers in the neural network
-    neurons_per_layer: 48         # Number of neurons in each hidden layer
+    shape: [1024, 512, 512, 1024]
     activation: relu              # Activation function (e.g., relu, tanh)
 
 env:
