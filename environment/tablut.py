@@ -214,13 +214,13 @@ class Environment(PyEnvironment):
         self._initialize_match()
         return ts.restart(state_to_tensor(self.current_state, self._trainer.color))
 
-    def _step(self, action_tensor: int) -> TimeStep:
+    def _step(self, action: int) -> TimeStep:
         """Advance the environment by one step."""
         logger.debug("Episode ended: %s", self._episode_ended)
         if self._episode_ended:
             return self._reset()
 
-        decoded_action = ActionDecoder.decode(action_tensor, self.current_state)
+        decoded_action = ActionDecoder.decode(action, self.current_state)
         # Update state and get trainer's reward
         logger.debug("Updating state with action: %s\n", decoded_action)
         trainer_reward = self._update_state(decoded_action)

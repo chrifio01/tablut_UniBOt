@@ -30,6 +30,39 @@ HYPER_PARAMS = parse_yaml(_hyperparams_file_path)
 
 
 class DQNPlayer(AbstractPlayer):
+    """
+    A reinforcement learning agent for playing Tablut using the Deep Q-Network (DQN) algorithm.
+
+    The `DQNPlayer` class integrates various components required to train, evaluate, 
+    and test a DQN agent within the Tablut game environment. It provides methods to 
+    predict optimal moves (`fit`), evaluate the agent's policy, and train the agent 
+    using experience replay. It also supports checkpointing during training for 
+    saving and restoring the model's progress.
+
+    Attributes:
+        _name (str): The name of the player ("DQNPlayer").
+        _color (Color): The color of the player (either `Color.WHITE` or `Color.BLACK`).
+        _current_state (State): The current state of the game, initialized to the starting state.
+        _env (Environment): The environment encapsulating the game logic and interactions.
+        _q_network (DQN): The Q-network that predicts Q-values for state-action pairs.
+        _agent (DQNAgent): The DQN agent responsible for training and policy evaluation.
+        _replay_buffer (ReplayMemory): The replay memory for storing and sampling experiences.
+
+    Methods:
+        __init__(color, training_mode): Initializes the DQNPlayer and its components.
+        fit(state): Predicts the optimal action for a given game state using the trained DQN.
+        evaluate(num_episodes): Evaluates the agent's policy over a specified number of episodes.
+        train(): Trains the DQN agent using experience replay and periodic evaluation.
+        test(num_episodes): Tests the trained agent in the environment for a given number of episodes.
+
+    Example:
+        ```python
+        player = DQNPlayer(color=Color.WHITE, training_mode=True)
+        player.train()  # Train the agent
+        action = player.fit(current_state)  # Predict the best action for the current state
+        average_reward = player.evaluate(num_episodes=10)  # Evaluate the agent's performance
+        ```
+    """
     
     def __init__(self, color: Color, *, training_mode: bool = False):
         super().__init__()
@@ -143,7 +176,7 @@ class DQNPlayer(AbstractPlayer):
                 time_step = self._env.step(action_step.action)
                 episode_reward += time_step.reward.numpy()
 
-            training_logger.debug(f"Episode %d: Reward = %f", episode + 1, episode_reward)
+            training_logger.debug("Episode %d: Reward = %f", episode + 1, episode_reward)
             total_reward += episode_reward
 
         # Compute the average reward and convert it to a scalar
@@ -212,7 +245,7 @@ class DQNPlayer(AbstractPlayer):
             step = self._agent.agent.train_step_counter.numpy()
 
             if step % log_interval == 0:
-                training_logger.debug(f"Step %d: Loss = %f", step, train_loss)
+                training_logger.debug("Step %d: Loss = %f", step, train_loss)
                 
             # Save checkpoints
             if step % eval_interval == 0:
