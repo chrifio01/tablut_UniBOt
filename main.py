@@ -1,5 +1,9 @@
+from model.player import DQNPlayer
+from shared import Color
+
 """
 Entrypoint for the TablutClient module.
+"""
 """
 
 import os
@@ -27,3 +31,12 @@ if __name__ == '__main__':
         client.main()
     except Exception as e:
         logger.error("An error occurred: %s", e)
+"""
+
+
+player = DQNPlayer(color=Color.WHITE)
+
+num_episodes = 5
+total_rewards = player.test(num_episodes)
+
+print(f"Total rewards over {num_episodes} episodes: {total_rewards}")
