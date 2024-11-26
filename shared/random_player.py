@@ -30,11 +30,6 @@ class RandomPlayer(AbstractPlayer):
         self._name = f'RandomPlayer_{color.value}' if color else "RandomPlayer"
         self._color = color
 
-    def send_move(self) -> None:
-        """
-        Placeholder method for sending the move. In this case, the player doesn't need to send anything manually.
-        """
-
     def fit(self, state: State, *args, **kwargs) -> Action:
         """
         Chooses a random valid move from the available possible moves.

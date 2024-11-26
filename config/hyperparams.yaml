@@ -1,12 +1,17 @@
 version: "1.0.0"
 
 training:
-  optimizer: adam
-  learning_rate: 0.001
-  target_update_tau: 0.05
-  target_update_period: 200
+  epsilon_fn:
+      initial_learning_rate: 1.0 # Initial learning rate
+      decay_steps: 100000         # Number of steps to decay the learning rate
+      end_learning_rate: 0.01
+  optimizer:
+    learning_rate: 0.001
   gamma: 0.99
-  gradient_clipping: 10.0
-  replay_buffer_capacity: 100000
-  batch_size: 64
-  min_replay_buffer_size: 1000
+  target_update_period: 1000
+  iterations: 2000
+  collect_steps_per_iteration: 1
+  initial_dataset_size: 1000
+
+env:
+  discount_factor: 0.99

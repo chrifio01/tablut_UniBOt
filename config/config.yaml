@@ -8,14 +8,17 @@ model:
 
 env:
   observation_spec:
-    shape: [323,]                    # Shape of observation
+    shape: [333,]                    # Shape of observation
   action_spec:
-    shape: [400,]                    # Shape of action
+    shape: [400, ]                    # Shape of action
   max_episode_steps: 1000         # Maximum steps in an episode
-  time_step_spec:                 # Time step specifications
-    step_type:                    # Step type (e.g., first, mid, last)
-      shape: []
-    reward:                       # Reward specification
-      shape: []
-    discount:                     # Discount factor specification
-      shape: []
+
+replay_buffer:
+  capacity: 100000
+  sample_batch_size: 64
+  min_size: 1000
+
+training:
+  log_interval: 2
+  eval_interval: 10
+  checkpoint_dir: ../training/checkpoints/

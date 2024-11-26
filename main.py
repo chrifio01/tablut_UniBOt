@@ -3,11 +3,11 @@ Entrypoint for the TablutClient module.
 """
 
 import os
-from shared.random_player import RandomPlayer
 from shared.utils import strp_color
 from shared.consts import INITIAL_STATE
 from shared.loggers import logger
 from connectors.client import Client
+from model.player import DQNPlayer
 
 if __name__ == '__main__':
     try:
@@ -22,9 +22,8 @@ if __name__ == '__main__':
             'server_ip': SERVER_IP,
             'port': int(WEBSOCKET_PORT)
         }
-        player = RandomPlayer(color=strp_color(PLAYER_COLOR))
+        player = DQNPlayer(color=strp_color(PLAYER_COLOR))
         client = Client(player=player, settings=settings)
-
         client.main()
     except Exception as e:
         logger.error("An error occurred: %s", e)

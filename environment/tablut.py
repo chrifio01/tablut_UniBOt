@@ -19,10 +19,13 @@ import random
 import copy
 
 import numpy as np
+import tensorflow as tf
 from tf_agents.environments.py_environment import PyEnvironment
-from tf_agents.specs import ArraySpec
+from tf_agents.specs import ArraySpec, array_spec
 from tf_agents.trajectories import time_step as ts
 from tf_agents.trajectories.time_step import TimeStep
+from tf_agents.environments import tf_py_environment
+
 from shared.utils import Action, Turn, State, black_win_con, strp_state, AbstractPlayer, Color, winner_color
 from shared.consts import WIN_TILES, INITIAL_STATE, WIN_REWARD, LOSS_REWARD, DRAW_REWARD, INVALID_ACTION_PUNISHMENT
 from shared.history import History, Match
@@ -31,6 +34,7 @@ from shared.exceptions import InvalidAction
 from shared.heuristic import heuristic
 from shared.random_player import RandomPlayer
 from shared.loggers import logger
+from environment.utils import ActionDecoder
 from .utils import state_to_tensor
 
 
@@ -77,9 +81,11 @@ class Environment(PyEnvironment):
         observation_spec_shape: Tuple[int, int],
         action_spec_shape: Tuple[int, int],
         discount_factor: float,
-        standard_dtype: np.dtype = np.float16,
+        standard_dtype: np.dtype = np.float32,
         reward_function=None,
-        opponent=None
+        opponent=None,
+        action_min: int = 0,
+        action_max: int = 399
     ):
         super().__init__()
         # Game and trainer settings
@@ -102,6 +108,8 @@ class Environment(PyEnvironment):
         self._standard_dtype = standard_dtype
         self._discount_factor = discount_factor
         logger.debug("discount_factor: %s", self._discount_factor)
+        self._action_min = action_min
+        self._action_max = action_max
 
         # Auxiliary variables
         self._episode_ended = False
@@ -129,7 +137,7 @@ class Environment(PyEnvironment):
             "reward_function": self.reward_function
         }
 
-    def get_state(self):
+    def get_state(self) -> State:
         """
         Returns the current state of the environment.
         """
@@ -140,7 +148,12 @@ class Environment(PyEnvironment):
         Sets the state of the environment.
         """
         self.current_state = state
-
+        
+    def to_TFPy(self):
+        """
+        Converts the environment to a TFPyEnvironment.
+        """
+        return tf_py_environment.TFPyEnvironment(self)
 
     @staticmethod
     def _init_opponent():
@@ -182,8 +195,8 @@ class Environment(PyEnvironment):
                 self._end_match()
 
     def action_spec(self):
-        return ArraySpec(
-            shape=self._action_spec_shape, dtype=self._standard_dtype, name='action')
+        return array_spec.BoundedArraySpec(
+            shape=(), dtype=np.int32, minimum=self._action_min, maximum=self._action_max, name='action')
 
     def observation_spec(self):
         return ArraySpec(
@@ -201,15 +214,16 @@ class Environment(PyEnvironment):
         self._initialize_match()
         return ts.restart(state_to_tensor(self.current_state, self._trainer.color))
 
-    def _step(self, action: Action) -> TimeStep:
+    def _step(self, action: int) -> TimeStep:
         """Advance the environment by one step."""
         logger.debug("Episode ended: %s", self._episode_ended)
         if self._episode_ended:
             return self._reset()
 
+        decoded_action = ActionDecoder.decode(action, self.current_state)
         # Update state and get trainer's reward
-        logger.debug("Updating state with action: %s\n", action)
-        trainer_reward = self._update_state(action)
+        logger.debug("Updating state with action: %s\n", decoded_action)
+        trainer_reward = self._update_state(decoded_action)
 
         # Check termination conditions
         logger.debug("Checking termination condition...")
@@ -231,7 +245,7 @@ class Environment(PyEnvironment):
         return ts.transition(
             state_to_tensor(self.current_state, self._trainer.color),
             reward=trainer_reward,
-            discount=self._discount_factor
+            discount=tf.constant(self._discount_factor, dtype=tf.float32)
         )
 
     def _is_it_a_tie(self) -> bool:

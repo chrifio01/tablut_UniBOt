@@ -67,6 +67,12 @@ LOGGING_CONFIG = {
             'formatter': 'default',
             'filename': 'app.log',
         },
+        'training_file': {
+            'class': 'logging.FileHandler',
+            'level': 'DEBUG',
+            'formatter': 'default',
+            'filename': 'training.log',
+        },
     },
     'root': {
         'level': 'DEBUG',
@@ -76,6 +82,11 @@ LOGGING_CONFIG = {
         'tablut_logger': {
             'level': 'DEBUG',
             'handlers': ['console', 'file'],
+            'propagate': False,
+        },
+        'training_logger': {
+            'level': 'DEBUG',
+            'handlers': ['training_file', 'console'],
             'propagate': False,
         },
     },
