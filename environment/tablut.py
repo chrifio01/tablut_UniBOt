@@ -150,6 +150,9 @@ class Environment(PyEnvironment):
         self.current_state = state
         
     def to_TFPy(self):
+        """
+        Converts the environment to a TFPyEnvironment.
+        """
         return tf_py_environment.TFPyEnvironment(self)
 
     @staticmethod

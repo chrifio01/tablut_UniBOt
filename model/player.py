@@ -8,18 +8,10 @@ import tensorflow as tf
 from tf_agents.trajectories import time_step as ts
 from tf_agents.policies import random_tf_policy
 
-from environment import Environment
-from model.utils.dqn_agent import DQNAgent
-from shared.consts import INITIAL_STATE
-from shared.history import History
-from shared.random_player import RandomPlayer
-from shared.utils import strp_state, Color, State, Action, parse_yaml, AbstractPlayer
-from environment.utils import state_to_tensor, ActionDecoder
-from shared.loggers import logger, training_logger
+from environment import Environment, state_to_tensor, ActionDecoder
+from shared import INITIAL_STATE, History, RandomPlayer, strp_state, Color, State, Action, parse_yaml, AbstractPlayer, logger, training_logger
 
-from .utils.replay_memory import ReplayMemory
-from .utils.dqn_agent import DQNAgent
-from .utils.dqn_network import DQN
+from .utils import ReplayMemory, DQNAgent, DQN
 
 _config_file_path = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -151,15 +143,18 @@ class DQNPlayer(AbstractPlayer):
                 time_step = self._env.step(action_step.action)
                 episode_reward += time_step.reward.numpy()
 
-            training_logger.debug(f"Episode {episode + 1}: Reward = {episode_reward}")
+            training_logger.debug(f"Episode %d: Reward = %f", episode + 1, episode_reward)
             total_reward += episode_reward
 
         # Compute the average reward and convert it to a scalar
         average_reward = total_reward / num_episodes
-        training_logger.debug(f"Policy evaluation complete. Average Reward = {float(average_reward):.2f}")
+        training_logger.debug("Policy evaluation complete. Average Reward = %.2f", float(average_reward))
         return float(average_reward)
     
     def train(self):
+        """
+        Train the agent.
+        """
         # Init training parameters
         training_logger.debug("Initializing for training...")
         num_iterations = HYPER_PARAMS["training"]["iterations"]
@@ -205,7 +200,7 @@ class DQNPlayer(AbstractPlayer):
         # Train the agent
         training_logger.debug("Starting training...")
         for i in range(num_iterations):
-            training_logger.debug(f"Iteration {i}...")
+            training_logger.debug("Iteration %d...", i)
             for _ in range(collect_steps_per_iteration):
                 self._replay_buffer.collect_step(self._agent.agent.collect_policy)
 
@@ -217,16 +212,16 @@ class DQNPlayer(AbstractPlayer):
             step = self._agent.agent.train_step_counter.numpy()
 
             if step % log_interval == 0:
-                training_logger.debug(f"Step {step}: Loss = {train_loss}")
+                training_logger.debug(f"Step %d: Loss = %f", step, train_loss)
                 
             # Save checkpoints
             if step % eval_interval == 0:
                 checkpoint_manager.save()
-                training_logger.debug(f"Checkpoint saved at step {step}.")
+                training_logger.debug("Checkpoint saved at step %d.", step)
                 
                 # Evaluate the policy
                 average_reward = self.evaluate()
-                training_logger.info(f"Evaluation at step {step}: Average Reward = {average_reward:.2f}")
+                training_logger.info("Evaluation at step %d: Average Reward = %.2f", step, average_reward)
                 
         training_logger.debug("Training completed.")
             
