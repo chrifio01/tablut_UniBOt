@@ -17,11 +17,8 @@ Dependencies:
 """
 
 import tensorflow as tf
-from tf_agents.trajectories import TimeStep
 from tf_agents.environments import TFPyEnvironment
 from tf_agents.agents import DqnAgent
-from tf_agents.replay_buffers.replay_buffer import ReplayBuffer
-from tf_agents.trajectories import trajectory
 from tf_agents.networks.q_network import QNetwork
 
 class DQNAgent:

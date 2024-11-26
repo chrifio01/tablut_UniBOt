@@ -1,4 +1,3 @@
-import tensorflow as tf
 from tf_agents.replay_buffers.tf_uniform_replay_buffer import TFUniformReplayBuffer
 from tf_agents.environments import PyEnvironment
 from tf_agents.trajectories import trajectory
