@@ -332,6 +332,10 @@ class DQNPlayer(AbstractPlayer):
             The environment in which to test the agent.
         num_episodes : int, optional
             The number of episodes to test the agent for (default is 100).
+        hyperparameters: HYPER_PARAMS
+            The .yaml file of hyperparameters to be add in the statistics.txt file, to track the hyperparameters used in training
+        file_txt: statistics.txt
+            The .txt file which summarize the metrics results by the training and the hyperaparameters used
 
         Returns
         -------
