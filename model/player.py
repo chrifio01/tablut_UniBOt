@@ -214,7 +214,7 @@ class DQNPlayer(AbstractPlayer):
             logger.error("Error during calculating move: %s", e)
             return RandomPlayer(color=self.color).fit(state)
     
-    def evaluate(self, num_episodes=10):
+    def evaluate(self, num_episodes=10, hyperparameters = HYPER_PARAMS, file_txt = "../evals/statistics.txt"):
         """
         Evaluate the agent's performance by running it in the environment for a fixed number of episodes.
         
@@ -226,6 +226,11 @@ class DQNPlayer(AbstractPlayer):
         """
         training_logger.debug("Starting policy evaluation...")
 
+        with open(file_txt, 'w') as f:
+        f.write("Hyperparameters:\n")
+        for key, value in hyperparameters.items():
+            f.write(f"{key}: {value}\n")
+
         total_reward = 0.0
         for episode in range(num_episodes):
             time_step = self._env.reset()
@@ -235,6 +240,8 @@ class DQNPlayer(AbstractPlayer):
                 action_step = self._agent.agent.policy.action(time_step)
                 time_step = self._env.step(action_step.action)
                 episode_reward += time_step.reward.numpy()
+                with open(file_txt, 'a') as f:
+                    f.write(f"Episode {episode}: Reward = {episode_reward}\n")
 
             training_logger.debug("Episode %d: Reward = %f", episode + 1, episode_reward)
             total_reward += episode_reward
