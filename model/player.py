@@ -227,9 +227,9 @@ class DQNPlayer(AbstractPlayer):
         training_logger.debug("Starting policy evaluation...")
 
         with open(file_txt, 'w') as f:
-        f.write("Hyperparameters:\n")
-        for key, value in hyperparameters.items():
-            f.write(f"{key}: {value}\n")
+            f.write("Hyperparameters:\n")
+            for key, value in hyperparameters.items():
+                f.write(f"{key}: {value}\n")
 
         total_reward = 0.0
         for episode in range(num_episodes):
