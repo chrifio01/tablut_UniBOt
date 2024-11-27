@@ -25,7 +25,7 @@ services:
     ports:
       - "5802:5800"  # white port
       - "5803:5801" # black port
-    entrypoint: ./runmyplayer.sh $PLAYER_COLOR $TIMEOUT $SERVER_IP
+    entrypoint: ./runmyplayer.sh $PLAYER_COLOR $TIMEOUT $SERVER_IP --debug
     networks:
       - tablut_network
 
@@ -41,7 +41,7 @@ services:
     ports:
       - "5804:5800"  # white port
       - "5805:5801" # black port
-    entrypoint: ./runmyplayer.sh $OPPONENT_COLOR $TIMEOUT $SERVER_IP
+    entrypoint: ./runmyplayer.sh $OPPONENT_COLOR $TIMEOUT $SERVER_IP --debug
     networks:
       - tablut_network
 
