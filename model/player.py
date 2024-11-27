@@ -34,37 +34,78 @@ class DQNPlayer(AbstractPlayer):
     A reinforcement learning agent for playing Tablut using the Deep Q-Network (DQN) algorithm.
 
     The `DQNPlayer` class integrates various components required to train, evaluate, 
-    and test a DQN agent within the Tablut game environment. It provides methods to 
-    predict optimal moves (`fit`), evaluate the agent's policy, and train the agent 
-    using experience replay. It also supports checkpointing during training for 
-    saving and restoring the model's progress.
+    and test a DQN agent within the Tablut game environment. It supports training 
+    from scratch, evaluating policy performance, and loading pretrained agents from checkpoints. 
+    Experience replay and checkpointing mechanisms enable effective training and model management.
 
     Attributes:
-        _name (str): The name of the player ("DQNPlayer").
-        _color (Color): The color of the player (either `Color.WHITE` or `Color.BLACK`).
-        _current_state (State): The current state of the game, initialized to the starting state.
-        _env (Environment): The environment encapsulating the game logic and interactions.
-        _q_network (DQN): The Q-network that predicts Q-values for state-action pairs.
-        _agent (DQNAgent): The DQN agent responsible for training and policy evaluation.
-        _replay_buffer (ReplayMemory): The replay memory for storing and sampling experiences.
+    ----------
+    _name : str
+        The name of the player ("DQNPlayer").
+    _color : Color
+        The color of the player (either `Color.WHITE` or `Color.BLACK`).
+    _current_state : State
+        The current state of the game, initialized to the starting state.
+    _env : Environment
+        The Tablut environment encapsulating game logic, interactions, and agent dynamics.
+    _q_network : DQN
+        The Q-network that predicts Q-values for state-action pairs.
+    _agent : DQNAgent
+        The DQN agent responsible for training, evaluation, and policy management.
+    _replay_buffer : ReplayMemory
+        The replay memory for storing and sampling experiences during training.
 
     Methods:
-        __init__(color, training_mode): Initializes the DQNPlayer and its components.
-        fit(state): Predicts the optimal action for a given game state using the trained DQN.
-        evaluate(num_episodes): Evaluates the agent's policy over a specified number of episodes.
-        train(): Trains the DQN agent using experience replay and periodic evaluation.
-        test(num_episodes): Tests the trained agent in the environment for a given number of episodes.
+    -------
+    __init__(color, training_mode=False, disable_env_logger=False, from_pretrained=None):
+        Initializes the DQNPlayer with its environment, Q-network, and DQN agent. 
+        Supports training from scratch or loading pretrained models from a checkpoint.
 
-    Example:
+    fit(state):
+        Predicts the optimal action for a given game state using the trained DQN.
+
+    evaluate(num_episodes):
+        Evaluates the agent's policy over a specified number of episodes, 
+        returning the average reward and other performance metrics.
+
+    train():
+        Trains the DQN agent using experience replay and periodic policy updates.
+        The training progress is checkpointed for later restoration.
+
+    test(num_episodes):
+        Tests the trained agent in the environment for a given number of episodes, 
+        measuring its performance and logging the outcomes.
+
+    Loading Pretrained Agents:
+    -------------------------
+    The `DQNPlayer` class can load a pretrained DQN agent from a zipped checkpoint file
+    by passing the `from_pretrained` argument when initializing the player. The agent's 
+    state, including the Q-network and policy, is fully restored for inference or further training.
+
+    Example Usage:
+    --------------
+    Training from Scratch:
         ```python
         player = DQNPlayer(color=Color.WHITE, training_mode=True)
         player.train()  # Train the agent
         action = player.fit(current_state)  # Predict the best action for the current state
-        average_reward = player.evaluate(num_episodes=10)  # Evaluate the agent's performance
+        ```
+
+    Loading a Pretrained Agent:
+        ```python
+        pretrained_path = "/path/to/pretrained_agent.zip"
+        player = DQNPlayer(color=Color.BLACK, from_pretrained=pretrained_path)
+        action = player.fit(current_state)  # Use the pretrained agent to predict the best action
+        ```
+    
+    Evaluating Policy Performance:
+        ```python
+        average_reward = player.evaluate(num_episodes=10)
+        print(f"Average Reward: {average_reward}")
         ```
     """
     
-    def __init__(self, color: Color, *, training_mode: bool = False, disable_env_logger = False):
+    def __init__(self, color: Color, *, training_mode: bool = False, disable_env_logger = False, from_pretrained: str = None):
         super().__init__()
         if training_mode:
             logger.disabled = True
@@ -111,14 +152,24 @@ class DQNPlayer(AbstractPlayer):
             end_learning_rate=HYPER_PARAMS["training"]["epsilon_fn"]["end_learning_rate"]
         )
 
-        self._agent = DQNAgent(
-            self._env,
-            self._q_network,
-            optimizer,
-            epsilon_fn=epsilon_fn,
-            gamma=HYPER_PARAMS["training"]["gamma"],
-            target_update_period=HYPER_PARAMS["training"]["target_update_period"],
-            )
+        if from_pretrained:
+            self._agent = DQNAgent(
+                self._env,
+                self._q_network,
+                optimizer,
+                epsilon_fn=epsilon_fn,
+                from_pretrained=from_pretrained
+                )
+            logger.debug("Agent successfully loaded from pretrained model %s", from_pretrained)
+        else:
+            self._agent = DQNAgent(
+                self._env,
+                self._q_network,
+                optimizer,
+                epsilon_fn=epsilon_fn,
+                gamma=HYPER_PARAMS["training"]["gamma"],
+                target_update_period=HYPER_PARAMS["training"]["target_update_period"],
+                )
         
         self._replay_buffer = ReplayMemory(
             self._agent.agent,

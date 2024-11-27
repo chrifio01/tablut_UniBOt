@@ -16,6 +16,9 @@ Dependencies:
 - PyYAML (`yaml`)
 """
 
+import os
+import zipfile
+import shutil
 import tensorflow as tf
 from tf_agents.environments import TFPyEnvironment
 from tf_agents.agents import DqnAgent
@@ -24,31 +27,6 @@ from tf_agents.networks.q_network import QNetwork
 class DQNAgent:
     """
     A class to represent a Deep Q-Network (DQN) agent for reinforcement learning.
-
-    This class provides methods for initializing the agent, collecting trajectories 
-    by interacting with the environment, and storing these trajectories in a replay 
-    buffer for future training. It utilizes the `tf-agents` library for implementing 
-    the agent's policies and environment interactions.
-
-    Attributes
-    ----------
-    env : TFPyEnvironment
-        The TensorFlow environment in which the agent operates.
-    agent : DqnAgent
-        The underlying DQN agent from the `tf-agents` library.
-    replay_buffer : ReplayBuffer
-        The replay buffer for storing collected trajectories.
-
-    Methods
-    -------
-    __init__(tf_env, q_network, optimizer, *, epsilon_fn, target_update_period=2000, 
-             td_errors_loss_fn=tf.keras.losses.Huber(reduction="none"), gamma=0.99, 
-             train_step_counter=tf.Variable(0)):
-        Initializes the DQNAgent with the specified environment, network, and training parameters.
-
-    collect_trajectory(replay_buffer, num_episodes=1000):
-        Collects trajectories by interacting with the environment and stores them 
-        in the provided replay buffer.
     """
 
     def __init__(
@@ -61,22 +39,74 @@ class DQNAgent:
         target_update_period: int = 2000,
         td_errors_loss_fn: tf.keras.losses.Loss = tf.keras.losses.Huber(reduction="none"),
         gamma: float = 0.99,
-        train_step_counter: tf.Variable = tf.Variable(0)
+        train_step_counter: tf.Variable = tf.Variable(0),
+        from_pretrained: str = None  # Pass the zipped checkpoint path if loading pretrained
         ):
         """
         Initializes the DQNAgent with the given environment.
 
         Parameters
         ----------
-        env : TFPyEnvironment
-            The environment in which the agent will operate.
+        tf_env : TFPyEnvironment
+            The TensorFlow environment in which the agent operates.
+        q_network : QNetwork
+            The Q-network to be used by the agent.
+        optimizer : tf.compat.v1.train.Optimizer
+            Optimizer for training the agent.
+        epsilon_fn : callable
+            A function to calculate epsilon for epsilon-greedy policy.
+        from_pretrained : str, optional
+            Path to a zipped checkpoint file to load a pretrained agent.
         """
-
         self.env = tf_env
 
-        self.agent = DqnAgent(
-            self.env.time_step_spec(),
-            self.env.action_spec(),
+        if from_pretrained:
+            # Load pretrained agent from the zipped checkpoint
+            self.agent = self._load(from_pretrained, tf_env, q_network, optimizer, epsilon_fn, 
+                                    target_update_period, td_errors_loss_fn, gamma, train_step_counter)
+        else:
+            # Create a new agent
+            self.agent = DqnAgent(
+                self.env.time_step_spec(),
+                self.env.action_spec(),
+                q_network=q_network,
+                optimizer=optimizer,
+                target_update_period=target_update_period,
+                td_errors_loss_fn=td_errors_loss_fn,
+                gamma=gamma,
+                train_step_counter=train_step_counter,
+                epsilon_greedy=lambda: epsilon_fn(train_step_counter)
+            )
+            self.agent.initialize()
+
+    def _load(self, zipped_checkpoint_path: str, tf_env, q_network, optimizer, epsilon_fn, 
+              target_update_period, td_errors_loss_fn, gamma, train_step_counter) -> DqnAgent:
+        """
+        Loads a pretrained DQN agent from a zipped checkpoint file.
+
+        Parameters
+        ----------
+        zipped_checkpoint_path : str
+            The path to the checkpoint file in a zipped format.
+
+        Returns
+        -------
+        DqnAgent
+            The loaded pretrained DQN agent.
+        """
+        # Unzip the checkpoint to a temporary directory
+        temp_dir = "/tmp/dqn_checkpoint"
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)  # Clean up if directory exists
+        os.makedirs(temp_dir, exist_ok=True)
+
+        with zipfile.ZipFile(zipped_checkpoint_path, 'r') as zip_ref:
+            zip_ref.extractall(temp_dir)
+
+        # Initialize a temporary agent to restore the state
+        temp_agent = DqnAgent(
+            tf_env.time_step_spec(),
+            tf_env.action_spec(),
             q_network=q_network,
             optimizer=optimizer,
             target_update_period=target_update_period,
@@ -85,5 +115,14 @@ class DQNAgent:
             train_step_counter=train_step_counter,
             epsilon_greedy=lambda: epsilon_fn(train_step_counter)
         )
+        temp_agent.initialize()
 
-        self.agent.initialize()
+        # Restore the agent from the checkpoint
+        checkpoint = tf.train.Checkpoint(agent=temp_agent)
+        latest_checkpoint = tf.train.latest_checkpoint(temp_dir)
+        if latest_checkpoint:
+            checkpoint.restore(latest_checkpoint).assert_consumed()
+        else:
+            raise ValueError("No checkpoint found in the provided zip file.")
+
+        return temp_agent
