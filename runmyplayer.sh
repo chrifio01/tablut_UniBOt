@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# Check if the correct number of arguments is provided
-if [ "$#" -ne 3 ]; then
-  echo "Usage: $0 <white|black> <timeout> <ip>"
+# Check if the correct number of arguments is provided (3 or 4 with --debug)
+if [ "$#" -lt 3 ] || [ "$#" -gt 4 ]; then
+  echo "Usage: $0 <white|black> <timeout> <ip> [--debug]"
   exit 1
 fi
 
@@ -31,6 +31,12 @@ if ! echo "$3" | grep -qE "$IP_REGEX"; then
 fi
 SERVER_IP=$3
 
+# Optional --debug flag
+DEBUG_FLAG=""
+if [ "$#" -eq 4 ] && [ "$4" = "--debug" ]; then
+  DEBUG_FLAG="--debug"
+fi
+
 # Export environment variables to make them available to main.py
 export PLAYER_COLOR=$PLAYER_COLOR
 export TIMEOUT=$TIMEOUT
@@ -47,4 +53,4 @@ echo "Starting client..."
 sleep 2
 
 # Run the main.py script with the configured environment variables
-python main.py
+python main.py $DEBUG_FLAG
