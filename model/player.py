@@ -4,6 +4,8 @@
 
 import os
 
+from datetime import datetime
+
 import tensorflow as tf
 from tf_agents.trajectories import time_step as ts
 from tf_agents.policies import random_tf_policy
@@ -318,7 +320,7 @@ class DQNPlayer(AbstractPlayer):
                 
         training_logger.debug("Training completed.")
             
-    def test(self, num_episodes = 1000, hyperparameters = HYPER_PARAMS, file_txt = "../evals/statistics.txt"):
+    def test(self, num_episodes = 1000, hyperparameters = HYPER_PARAMS, file_txt = "statistics.txt"):
         """
         Tests the DQN agent in the given environment.
 
@@ -336,6 +338,13 @@ class DQNPlayer(AbstractPlayer):
         list
             A list of total rewards for each episode.
         """
+
+        date_folder = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        path_dir = os.path.join(evals_dir, date_folder)
+        if not os.path.exists(path_dir):
+            os.makedirs(path_dir)
+        
+        file_txt = os.path.join(path_dir, file_txt)
         
         with open(file_txt, 'w') as f:
             f.write("Hyperparameters:\n")
