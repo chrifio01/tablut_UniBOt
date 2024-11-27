@@ -9,7 +9,7 @@ from tf_agents.trajectories import time_step as ts
 from tf_agents.policies import random_tf_policy
 
 from environment import Environment, state_to_tensor, ActionDecoder
-from shared import INITIAL_STATE, History, RandomPlayer, strp_state, Color, State, Action, parse_yaml, AbstractPlayer, logger, training_logger
+from shared import INITIAL_STATE, History, RandomPlayer, strp_state, Color, State, Action, parse_yaml, AbstractPlayer, logger, training_logger, env_logger, MoveChecker
 
 from .utils import ReplayMemory, DQNAgent, DQN
 
@@ -64,17 +64,22 @@ class DQNPlayer(AbstractPlayer):
         ```
     """
     
-    def __init__(self, color: Color, *, training_mode: bool = False):
+    def __init__(self, color: Color, *, training_mode: bool = False, disable_env_logger = False):
         super().__init__()
         if training_mode:
             logger.disabled = True
+        env_logger.disabled = disable_env_logger
+        
         self._name = "DQNPlayer"
         self._color = color
         
         self._current_state = strp_state(INITIAL_STATE)
         history = History(matches={})
         trainer = self
-        opponent = RandomPlayer(color=Color.BLACK)
+        if self.color:
+            opponent = RandomPlayer(color=Color.BLACK if self.color == Color.WHITE else Color.WHITE)
+        else:
+            opponent = RandomPlayer(color=None)
         observation_spec_shape = CONFIG['env']['observation_spec']["shape"]
         action_spec_shape = CONFIG['env']['action_spec']["shape"]
         discount_factor = HYPER_PARAMS['env']['discount_factor']
@@ -90,7 +95,7 @@ class DQNPlayer(AbstractPlayer):
         )
         self._env = self._env.to_TFPy()
         
-        shape = (CONFIG["model"]["dqn"]["neurons_per_layer"], CONFIG["model"]["dqn"]["hidden_layers_num"])
+        shape = CONFIG["model"]["dqn"]["shape"]
         
         self._q_network = DQN(
             input_tensor_spec=self._env.observation_spec(),
@@ -136,23 +141,27 @@ class DQNPlayer(AbstractPlayer):
         Returns:
             Action: The action chosen by the DQN based on predicted Q-values.
         """
-        assert self._color is not None, "Player color must be set before calling fit."
+        try:
+            assert self._color is not None, "Player color must be set before calling fit."
 
-        # Convert the state into a tensor suitable for the model
-        observation = state_to_tensor(state, self._color)
+            # Convert the state into a tensor suitable for the model
+            observation = state_to_tensor(state, self._color)
 
-        # Ensure observation has a batch dimension
-        batched_observation = tf.expand_dims(observation, axis=0)  # Add batch dimension
+            # Ensure observation has a batch dimension
+            batched_observation = tf.expand_dims(observation, axis=0)  # Add batch dimension
 
-        # Use the agent's policy to predict the action from the current environment state
-        action_step = self._agent.agent.policy.action(
-            ts.restart(batched_observation)  # Wrap in TimeStep with batch dimension
-        )
+            # Use the agent's policy to predict the action from the current environment state
+            action_step = self._agent.agent.policy.action(
+                ts.restart(batched_observation)  # Wrap in TimeStep with batch dimension
+            )
 
-        # Decode the selected action into a format usable by the environment
-        action = ActionDecoder.decode(action_step.action.numpy()[0], state)
-
-        return action
+            # Decode the selected action into a format usable by the environment
+            action = ActionDecoder.decode(action_step.action.numpy()[0], state)
+            MoveChecker.is_valid_move(state, action)
+            return action
+        except Exception as e:
+            logger.error("Error during calculating move: %s", e)
+            return RandomPlayer(color=self.color).fit(state)
     
     def evaluate(self, num_episodes=10):
         """

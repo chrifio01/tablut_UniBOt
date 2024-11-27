@@ -2,8 +2,7 @@ version: "1.0.0"
 
 model:
   dqn:
-    hidden_layers_num: 3          # Number of hidden layers in the neural network
-    neurons_per_layer: 48         # Number of neurons in each hidden layer
+    shape: [1024, 512, 512, 256]
     activation: relu              # Activation function (e.g., relu, tanh)
 
 env:
@@ -14,11 +13,11 @@ env:
   max_episode_steps: 1000         # Maximum steps in an episode
 
 replay_buffer:
-  capacity: 100000
+  capacity: 1000000
   sample_batch_size: 64
   min_size: 1000
 
 training:
-  log_interval: 2
-  eval_interval: 10
+  log_interval: 200
+  eval_interval: 1000
   checkpoint_dir: ../training/checkpoints/

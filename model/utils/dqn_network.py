@@ -34,7 +34,7 @@ def DQN(
     kernel_initializer=None,
     batch_squash=True,
     dtype=tf.float32,
-    q_layer_activation_fn=None,
+    q_layer_activation_fn: str = 'linear',
     name='DQNNetwork'
     ):
     """
