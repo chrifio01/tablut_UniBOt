@@ -4,7 +4,7 @@ Entrypoint for the TablutClient module.
 
 import os
 import argparse
-from shared import strp_color, INITIAL_STATE, logger, env_logger, training_logger
+from shared import strp_color, INITIAL_STATE, logger
 from connectors.client import Client
 from model.player import DQNPlayer
 
