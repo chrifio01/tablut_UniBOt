@@ -43,6 +43,8 @@ from typing import Annotated, Tuple, List, Union
 from pydantic import BaseModel
 import numpy as np
 
+from shared.consts import CAMPS
+
 __all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square', 'strp_turn', 'Turn',
            'strp_color']
 
@@ -403,6 +405,26 @@ class Board:
         else:
             self.__pieces[from_indexes] = Piece.EMPTY
         self.__pieces[to_indexes] = moving_piece
+        
+        # Check for captures around the destination
+        adjacent_positions = [
+            (to_indexes[0] + 1, to_indexes[1]),
+            (to_indexes[0] - 1, to_indexes[1]),
+            (to_indexes[0], to_indexes[1] + 1),
+            (to_indexes[0], to_indexes[1] - 1),
+        ]
+
+        for pos in adjacent_positions:
+            if 0 <= pos[0] < self.__height and 0 <= pos[1] < self.__width:
+                captured_piece = self.get_piece(pos)
+
+                # Only check for captures of opponent's pieces
+                if action.turn == Turn.BLACK_TURN and captured_piece == Piece.DEFENDER:
+                    if self._is_a_capture(pos, captured_piece):
+                        self.__pieces[pos] = Piece.EMPTY
+                elif action.turn == Turn.WHITE_TURN and captured_piece == Piece.ATTACKER:
+                    if self._is_a_capture(pos, captured_piece):
+                        self.__pieces[pos] = Piece.EMPTY
 
     def get_piece(self, position: Tuple[int, int]) -> Piece:
         """
@@ -424,7 +446,41 @@ class Board:
             str: A string representation of the board.
         """
         return '\n'.join(''.join(piece.value for piece in row) for row in self.__pieces[::-1])
+    
+    def _is_a_capture(self, moving_piece_coords: Tuple[int, int], moving_piece_type: Piece) -> bool:
+        """
+        Checks if a piece at a given position is captured.
 
+        Args:
+            moving_piece_coords (Tuple[int, int]): The (row, column) position of the moving piece.
+            moving_piece_type (Piece): The type of the moving piece (ATTACKER, DEFENDER, or KING).
+
+        Returns:
+            bool: True if the piece is captured, False otherwise.
+        """
+        assert moving_piece_type in (Piece.ATTACKER, Piece.DEFENDER, Piece.KING)
+        
+        x, y = moving_piece_coords
+        adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        
+        def is_enemy_or_threat(pos: Tuple[int, int]) -> bool:
+            """Helper to determine if a position contains an enemy, throne, or camp."""
+            row, col = pos
+            if not (0 <= row < self.height and 0 <= col < self.width):
+                return False  # Out of bounds
+            piece = self.get_piece(pos)
+            if moving_piece_type == Piece.DEFENDER or moving_piece_type == Piece.KING:
+                return piece == Piece.ATTACKER or pos in CAMPS or piece == Piece.THRONE
+            elif moving_piece_type == Piece.ATTACKER:
+                return piece in {Piece.DEFENDER, Piece.KING}
+            return False
+
+        # Check surrounding positions to determine capture
+        threats_count = sum(is_enemy_or_threat(pos) for pos in adjacent_positions)
+
+        # Regular rules for Attackers and Defenders:
+        return threats_count >= 2
+    
     def king_pos(self):
         """
         Return the king position on the board as a tuple of two elements.
