@@ -31,9 +31,7 @@ def state_to_tensor(state: State, player_color: Color) -> np.ndarray:
     flattened_board_input = featurized_state.board_input.flatten()
     return np.concatenate([
         flattened_board_input,
-        featurized_state.turn_input,
-        featurized_state.white_input,
-        featurized_state.black_input,
+        featurized_state.turn_input
     ]).astype(np.float32)
     
 class ActionDecoder:
