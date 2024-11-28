@@ -15,6 +15,7 @@ from environment import Environment, state_to_tensor, ActionDecoder
 from shared import INITIAL_STATE, History, RandomPlayer, strp_state, Color, State, Action, parse_yaml, AbstractPlayer, logger, training_logger, env_logger, MoveChecker
 from shared.consts import WIN_REWARD, INVALID_ACTION_PUNISHMENT, LOSS_REWARD, DRAW_REWARD
 from .utils import ReplayMemory, DQNAgent, DQN
+from environment.utils import TablutCustomTFPolicy
 
 
 _config_file_path = os.path.join(
@@ -300,7 +301,7 @@ class DQNPlayer(AbstractPlayer):
         training_logger.debug("Collecting initial data...")
         for _ in range(initial_dataset_size):
             self._replay_buffer.collect_step(
-                random_tf_policy.RandomTFPolicy(
+                TablutCustomTFPolicy(
                     self._env.time_step_spec(), self._env.action_spec()
                 )
             )

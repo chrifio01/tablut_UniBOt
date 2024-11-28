@@ -11,10 +11,16 @@ Classes:
         Decodes an action tensor produced by a DQN into a valid Tablut action.
 """
 from typing import Tuple
+import tensorflow as tf
+from tf_agents.policies import TFPolicy
+from tf_agents.trajectories.policy_step import PolicyStep
+from tf_agents.trajectories.time_step import TimeStep
 
 import numpy as np
-from shared.utils import State, StateFeaturizer, Color, Action, Piece, strf_square
+from shared.utils import State, StateFeaturizer, Color, Action, Piece, strf_square, strp_square
 from shared.consts import DEFENDER_NUM, ATTACKER_NUM
+from shared.utils.env_utils import StateDecoder
+from shared import MoveChecker
 
 def state_to_tensor(state: State, player_color: Color) -> np.ndarray:
     """
@@ -205,3 +211,166 @@ class ActionDecoder:
             return Action(from_=strf_square(from_tuple), to_=strf_square(to_tuple), turn=turn)
         except:
             return None
+        
+class ActionEncoder:
+    """
+    Encodes a Tablut action into a tensor format suitable for input into a DQN model.
+
+    Methods:
+        encode(action: Action, state: State) -> int:
+            Converts a valid Tablut action into an action index for the model.
+    """
+
+    @staticmethod
+    def encode(action: Action, state: State) -> int:
+        """
+        Encodes the action into an index suitable for model input.
+
+        Args:
+            action (Action): The action to encode.
+            state (State): The current game state.
+
+        Returns:
+            int: The encoded action index.
+        """
+        from_coordinates = strp_square(action.from_)
+        to_coordinates = strp_square(action.to_)
+
+        # Get the piece type from the action
+        piece_type = state.board.get_piece(from_coordinates)
+        piece_index = ActionEncoder._get_piece_index(from_coordinates, piece_type, state)
+
+        # Get the move index based on destination
+        move_index = ActionEncoder._get_move_index(from_coordinates, to_coordinates, state)
+
+        # Calculate the final action index
+        action_index = piece_index * 16 + move_index
+        return action_index
+
+    @staticmethod
+    def _get_piece_index(coordinates: Tuple[int, int], piece_type: Piece, state: State) -> int:
+        """
+        Gets the index of the piece of the specified type based on its coordinates.
+
+        Args:
+            coordinates (Tuple[int, int]): The coordinates of the piece.
+            piece_type (Piece): The type of the piece (King, Defender, Attacker).
+            state (State): The current game state.
+
+        Returns:
+            int: The index of the piece.
+        """
+        target_indices = np.argwhere(state.board.pieces == piece_type)
+        
+        # Calculate distances from (0, 0) to sort by proximity
+        distances = np.linalg.norm(target_indices - np.array([0, 0]), axis=1)
+        sorted_indices = target_indices[np.argsort(distances)]
+
+        # Determine the index based on the piece type and its rank in sorted order
+        if piece_type == Piece.KING:
+            return 0  # King is always at index 0
+        elif piece_type == Piece.DEFENDER:
+            # Find the rank of the defender piece based on its position
+            piece_rank = np.where((coordinates[0], coordinates[1]) == sorted_indices)[0][0]
+            return piece_rank + 1  # Indices 1-8 for defenders
+        elif piece_type == Piece.ATTACKER:
+            # Find the rank of the attacker piece based on its position
+            piece_rank = np.where((coordinates[0], coordinates[1]) == sorted_indices)[0][0]
+            return piece_rank + 9  # Indices 9-24 for attackers
+        else:
+            raise ValueError("Invalid piece type")
+
+    @staticmethod
+    def _get_move_index(from_coordinates: Tuple[int, int], to_coordinates: Tuple[int, int], state: State) -> int:
+        """
+        Gets the move index based on the destination coordinates.
+
+        Args:
+            from_coordinates (Tuple[int, int]): The starting coordinates of the piece.
+            to_coordinates (Tuple[int, int]): The destination coordinates of the move.
+            state (State): The current game state.
+
+        Returns:
+            int: The index of the move.
+        """
+        row, col = from_coordinates
+        pieces = state.board.pieces
+
+        valid_moves = []
+        
+        # Collect all valid moves in the same way as in MoveChecker
+        # Vertical moves
+        for r in range(row):  # Upward moves
+            valid_moves.append((r, col))
+        for r in range(row + 1, pieces.shape[0]):  # Downward moves
+            valid_moves.append((r, col))
+
+        # Horizontal moves
+        for c in range(col):  # Leftward moves
+            valid_moves.append((row, c))
+        for c in range(col + 1, pieces.shape[1]):  # Rightward moves
+            valid_moves.append((row, c))
+
+        # Return the index corresponding to the destination coordinates
+        if to_coordinates in valid_moves:
+            return valid_moves.index(to_coordinates)
+        else:
+            raise ValueError("Destination coordinates are not a valid move.")
+
+class TablutCustomTFPolicy(TFPolicy):
+    """
+    A custom TFPolicy for Tablut that uses MoveChecker to validate moves
+    and selects a random valid move as the action.
+    """
+
+    def __init__(self, time_step_spec, action_spec, name=None):
+        """
+        Initializes the policy.
+
+        Args:
+            time_step_spec: Specification of the input time steps.
+            action_spec: Specification of the actions.
+            move_checker: Instance of the MoveChecker class for move validation.
+            state_adapter: Function to adapt the observation to a MoveChecker-compatible state.
+            name: Name of the policy.
+        """
+        super().__init__(time_step_spec, action_spec, name=name)
+
+    def _variables(self):
+        """Return the trainable variables (none for this random policy)."""
+        return []
+
+    def _distribution(self, time_step, policy_state):
+        """Return the distribution over actions (not used for this policy)."""
+        raise NotImplementedError("This policy generates actions directly, not distributions.")
+
+    def _action(self, time_step: TimeStep, policy_state, seed=None):
+        """
+        Generate a random valid action for the current time step.
+
+        Args:
+            time_step (TimeStep): Current time step containing the observation.
+            policy_state: Current state of the policy (unused for random policy).
+            seed: Random seed for reproducibility (optional).
+
+        Returns:
+            PolicyStep: The chosen action and updated policy state.
+        """
+        # Convert observation to a MoveChecker-compatible state
+        state = StateDecoder.decode(time_step.observation)
+
+        # Generate all valid moves using MoveChecker
+        valid_moves = list(MoveChecker.gen_possible_moves(state))
+
+        if not valid_moves:
+            raise ValueError("No valid moves available for the current state.")
+
+        # Randomly select one of the valid moves
+        np_random = np.random.default_rng(seed)
+        selected_move = np_random.choice(valid_moves)
+
+        # Encode the move into an index compatible with the action_spec
+        action_index = ActionEncoder.encode(selected_move, state)
+
+        # Return the action as a PolicyStep
+        return PolicyStep(action=np.array([action_index], dtype=np.int32), state=policy_state)

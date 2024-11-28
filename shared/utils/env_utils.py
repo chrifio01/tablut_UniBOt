@@ -23,6 +23,10 @@ from pydantic import BaseModel
 from shared.consts import WEIGHTS, CAMPS
 from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn, Color
 
+from tensorflow.python.ops.numpy_ops import np_config
+np_config.enable_numpy_behavior()
+
+
 __all__ = ['State', 'strp_state', 'state_decoder']
 
 
@@ -114,6 +118,7 @@ def king_distance_from_center(board: Board, king: tuple[int, int]):
     return sqrt((king[0] - (board.height // 2)) ** 2 + (king[1] - (board.width // 2)) ** 2)
 
 
+
 def king_surrounded(board: Board):
     """
     Return the number of sides in which the king is surrounded by an enemy (max(c) = 4)
@@ -196,6 +201,64 @@ def piece_parser(piece: Piece) -> int:
                     Piece.THRONE: 3}
     return state_pieces[piece]
 
+class StateDecoder:
+    """
+    Decodes a tensor representation of a state into a State object and additional information.
+
+    Methods:
+        decode(state_tensor: np.ndarray, player_color: Color) -> Tuple[State, Color]:
+            Decodes a tensor into a State object and the player's color.
+    """
+
+    @staticmethod
+    def decode(state_tensor: np.ndarray) -> State:
+        """
+        Decode a tensor representation back into a State object.
+
+        Args:
+            state_tensor (np.ndarray): The tensor representation of the state.
+            player_color (Color): The color of the player for whom the state was featurized.
+
+        Returns:
+            Tuple[State, Color]: The decoded State object and the player's color.
+        """
+        # Ensure the input is converted into a NumPy array
+        state_tensor_l = state_tensor.tolist()[0]
+
+        # Define sizes for slicing
+        flattened_board_size = 4 * 9 * 9  # 324
+
+        # Extract the board input and reshape
+        board_input = np.array(state_tensor_l[:flattened_board_size]).reshape((4, 9, 9)).astype(bool)
+
+        # Extract turn information
+        turn_input = state_tensor_l[flattened_board_size:flattened_board_size + 1]
+        is_white_turn = bool(turn_input[0])
+
+        # Determine whose turn it is based on the input
+        turn_color = Turn.WHITE_TURN if is_white_turn else Turn.BLACK_TURN
+
+        # Reverse map the board representation
+        board = np.full((9, 9), Piece.EMPTY, dtype=Piece)  # Initialize an empty board
+        for i in range(9):
+            for j in range(9):
+                if board_input[piece_parser(Piece.KING)][i, j]:
+                    board[i, j] = Piece.KING
+                elif board_input[piece_parser(Piece.DEFENDER)][i, j]:
+                    board[i, j] = Piece.DEFENDER
+                elif board_input[piece_parser(Piece.ATTACKER)][i, j]:
+                    board[i, j] = Piece.ATTACKER
+            
+        if board[9//2] [9//2] != Piece.KING:
+            board[9//2][9//2] = Piece.THRONE
+
+        # Create a State object using the reconstructed board
+        decoded_board = Board(board)
+        decoded_state = State(board=decoded_board, turn=turn_color)
+
+        # Return the decoded state and player color
+        return decoded_state
+    
 class FeaturizedState(BaseModel):
     """
     Model representing the featurized state of the Tablut game for input into the DQN.
@@ -246,7 +309,7 @@ class StateFeaturizer:
                 try:
                     position = (i, j)
                     piece = piece_parser(Piece(board.get_piece(position)))
-                    position_layer[piece][-i - 1, j] = True
+                    position_layer[piece][i, j] = True
                 except KeyError:
                     pass
 
