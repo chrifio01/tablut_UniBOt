@@ -43,7 +43,7 @@ from typing import Annotated, Tuple, List, Union
 from pydantic import BaseModel
 import numpy as np
 
-from shared.consts import CAMPS
+from shared.consts import CAMPS, WIN_TILES
 
 __all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square', 'strp_turn', 'Turn',
            'strp_color']
@@ -481,6 +481,53 @@ class Board:
         # Regular rules for Attackers and Defenders:
         return threats_count >= 2
     
+    def num_threats_to_piece(self, piece: tuple, piece_type: Piece) -> int:
+        """
+        Calculates the number of threats to a piece at a given position.
+
+        Args:
+            piece (tuple): Coordinates (row, column) of the piece to evaluate.
+            piece_type (Piece): Type of the piece (e.g., Piece.KING, Piece.DEFENDER).
+
+        Returns:
+            int: Number of threats (attackers or strategic blockers) adjacent to the piece.
+        """
+        x, y = piece
+        threats = 0
+        adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+
+        for pos in adjacent_positions:
+            if 0 <= pos[0] < self.__height and 0 <= pos[1] < self.__width:
+                threat_piece = self.get_piece(pos)
+                if piece_type == Piece.KING:
+                    if threat_piece in {Piece.ATTACKER, Piece.THRONE} or pos in CAMPS:
+                        threats += 1
+                elif piece_type == Piece.DEFENDER and threat_piece == Piece.ATTACKER:
+                    threats += 1
+        return threats
+    
+    def king_free_escape_routes(self, king_pos: tuple) -> int:
+        """
+        Evaluates the number of clear escape routes for the king.
+
+        Args:
+            king_pos (tuple): Coordinates (row, column) of the king.
+
+        Returns:
+            int: Number of clear escape routes for the king.
+        """
+        escape_routes = 0
+        escape_positions = [
+            (king_pos[0], self.width - 1),  # Right edge
+            (king_pos[0], 0),              # Left edge
+            (self.height - 1, king_pos[1]),  # Bottom edge
+            (0, king_pos[1])               # Top edge
+        ]
+        for pos in escape_positions:
+            if self.is_there_a_clear_view(king_pos, pos):
+                escape_routes += 1
+        return escape_routes
+    
     def king_pos(self):
         """
         Return the king position on the board as a tuple of two elements.
@@ -538,6 +585,32 @@ class Board:
         return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if
                 self.__pieces[i, j] == Piece.ATTACKER]
 
+    def is_tile_free(self, tile):
+        # Check if the specified tile is free (not occupied by any piece)
+        row, col = tile
+        return self.__pieces[row][col] == Piece.EMPTY
+    
+    def king_proximity_to_escape(self):
+        """
+        Calculate the minimum Manhattan distance from the king to the escape (WIN) tiles.
+        
+        Returns:
+            int: The minimum Manhattan distance to the closest escape tile, or float('inf') if no escape tiles are reachable.
+        """
+        king_position = self.king_pos()
+        min_distance = float('inf')  # Start with an infinitely large distance
+        
+        # Iterate over each WIN TILE to calculate proximity
+        for tile in WIN_TILES:
+            if self.is_tile_free(tile):  # Only consider free WIN TILES
+                manhattan_distance = abs(king_position[0] - tile[0]) + abs(king_position[1] - tile[1])
+                
+                # Update minimum distance if the current one is smaller
+                if manhattan_distance < min_distance:
+                    min_distance = manhattan_distance
+
+        # Return the minimum distance found or float('inf') if no valid tiles were found
+        return min_distance if min_distance != float('inf') else None
 
 def parse_state_board(state_board: List[List[str]]) -> Board:
     """
