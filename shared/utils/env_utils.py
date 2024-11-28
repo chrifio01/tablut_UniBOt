@@ -128,22 +128,22 @@ def king_surrounded(board: Board):
 
     if king[0] + 1 >= board.height:
         c += 1
-    elif board.get_piece((king[0] + 1, king[1])) == Piece.ATTACKER:
+    elif board.get_piece((king[0] + 1, king[1])) in (Piece.ATTACKER, Piece.THRONE) or (king[0] + 1, king[1]) in CAMPS:
         c += 1
         blocked_pos.append((king[0] + 1, king[1]))
     if king[0] - 1 < 0:
         c += 1
-    elif board.get_piece((king[0] - 1, king[1])) == Piece.ATTACKER:
+    elif board.get_piece((king[0] - 1, king[1])) in (Piece.ATTACKER, Piece.THRONE)  or (king[0] - 1, king[1]) in CAMPS:
         c += 1
         blocked_pos.append((king[0] - 1, king[1]))
     if king[1] + 1 >= board.width:
         c += 1
-    elif board.get_piece((king[0], king[1] + 1)) == Piece.ATTACKER:
+    elif board.get_piece((king[0], king[1] + 1)) in (Piece.ATTACKER, Piece.THRONE) or (king[0], king[1] + 1) in CAMPS:
         c += 1
         blocked_pos.append((king[0], king[1] + 1))
     if king[1] - 1 < 0:
         c += 1
-    elif board.get_piece((king[0], king[1] - 1)) == Piece.ATTACKER:
+    elif board.get_piece((king[0], king[1] - 1)) in (Piece.ATTACKER, Piece.THRONE) or (king[0], king[1] - 1) in CAMPS:
         c += 1
         blocked_pos.append((king[0], king[1] - 1))
 
@@ -262,24 +262,54 @@ class StateFeaturizer:
         return FeaturizedState(board_input=position_layer, turn_input=turn_layer, white_input=w_heur_layer, black_input=b_heur_layer)
 
 
-def black_win_con(board: Board, king: tuple[int, int]):
+def black_win_con(board: Board, king: tuple[int, int]) -> bool:
     """
-    Black player win condition is satisfied when the value of this function is 4, the king is surrounded on every side
+    Determines if the Black player captures the King.
 
-    Arg:
-    Board object
-    The king position as a tuple of int
+    Args:
+        board (Board): The board object representing the game state.
+        king (tuple[int, int]): The position of the King as a (row, column) tuple.
 
-    Return:
-    The number of blocked sides of the king
+    Returns:
+        bool: True if the Black player captures the King, False otherwise.
     """
     x, y = king
-    count = 0
     adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    blockers = []  # List of what's blocking each side
 
     for pos in adjacent_positions:
         if 0 <= pos[0] < board.height and 0 <= pos[1] < board.width:
-            if pos in board.get_black_coordinates() or board.get_piece(pos) in {Piece.THRONE, Piece.CAMPS, Piece.ATTACKER}:
-                count += 1
+            piece = board.get_piece(pos)
+            if piece in {Piece.ATTACKER, Piece.THRONE} or pos in CAMPS:
+                blockers.append((pos, piece))
 
-    return count
+    # Condition 1: Surrounded by Attackers on all four sides
+    if all(block[1] == Piece.ATTACKER for block in blockers) and len(blockers) == 4:
+        return True
+
+    # Condition 2: Adjacent to the Throne, blocked on the other three sides by Attackers
+    throne_adjacent = any(block[1] == Piece.THRONE for block in blockers)
+    if throne_adjacent and len(blockers) == 4 and sum(block[1] == Piece.ATTACKER for block in blockers) == 3:
+        return True
+
+    # Condition 3: Adjacent to a Camp, opposite side is an Attacker, other two sides are Attackers
+    for block in blockers:
+        if block[0] in CAMPS:
+            camp_pos = block[0]
+
+            # Calculate the opposite position
+            if camp_pos[0] == x:  # Camp is along the same row
+                opposite_pos = (x, 2 * y - camp_pos[1])
+            elif camp_pos[1] == y:  # Camp is along the same column
+                opposite_pos = (2 * x - camp_pos[0], y)
+            else:
+                continue  # Skip if camp is not directly adjacent
+
+            # Validate the opposite position and check the capture condition
+            if (0 <= opposite_pos[0] < board.height and
+                0 <= opposite_pos[1] < board.width and
+                board.get_piece(opposite_pos) == Piece.ATTACKER):
+                return True
+
+    # If none of the conditions are met, the King is not captured
+    return False
