@@ -291,6 +291,8 @@ class Environment(PyEnvironment):
 
     def _calculate_rewards(self, current_state: State, action_performed: Action):
         """Calculate rewards based on the current state and action."""
+        if action_performed is None:
+            return INVALID_ACTION_PUNISHMENT
         return self.reward_function(current_state, action_performed)
 
     def _update_history(self, match_id: str, state: State, action=None, reward=None):

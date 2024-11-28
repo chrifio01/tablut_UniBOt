@@ -190,15 +190,18 @@ class ActionDecoder:
         # Map flat index to 2D action indices: (action_column_index, move_index)
         action_column_index = action_index // 16
         move_index = action_index % 16
+        
+        try:
+            # Get the starting coordinates of the pawn being moved
+            from_tuple = ActionDecoder._get_moving_pawn_coordinates((action_column_index, move_index), state)
 
-        # Get the starting coordinates of the pawn being moved
-        from_tuple = ActionDecoder._get_moving_pawn_coordinates((action_column_index, move_index), state)
+            # Get the destination coordinates for the pawn
+            to_tuple = ActionDecoder._get_destination_coordinates((action_column_index, move_index), from_tuple, state)
 
-        # Get the destination coordinates for the pawn
-        to_tuple = ActionDecoder._get_destination_coordinates((action_column_index, move_index), from_tuple, state)
+            # Retrieve the turn information from the state
+            turn = state.turn
 
-        # Retrieve the turn information from the state
-        turn = state.turn
-
-        # Return the constructed Action object
-        return Action(from_=strf_square(from_tuple), to_=strf_square(to_tuple), turn=turn)
+            # Return the constructed Action object
+            return Action(from_=strf_square(from_tuple), to_=strf_square(to_tuple), turn=turn)
+        except:
+            return None
