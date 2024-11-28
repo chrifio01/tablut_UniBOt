@@ -343,7 +343,7 @@ class DQNPlayer(AbstractPlayer):
             A list of total rewards for each episode.
         """
 
-        date_folder = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        date_folder = datetime.now().strftime("%Y-%m-%dT%H-%M")
         path_dir = os.path.join(evals_dir, date_folder)
         if not os.path.exists(path_dir):
             os.makedirs(path_dir)
