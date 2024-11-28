@@ -6,12 +6,12 @@ training:
       decay_steps: 25000         # Number of steps to decay the learning rate
       end_learning_rate: 0.01
   optimizer:
-    learning_rate: 0.001
-  gamma: 0.98
-  target_update_period: 1000
+    learning_rate: 0.0006
+  gamma: 0.99
+  target_update_period: 2500
   iterations: 100000
   collect_steps_per_iteration: 8
   initial_dataset_size: 10000
 
 env:
-  discount_factor: 0.98
+  discount_factor: 0.99
