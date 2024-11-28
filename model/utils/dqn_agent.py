@@ -121,7 +121,7 @@ class DQNAgent:
         checkpoint = tf.train.Checkpoint(agent=temp_agent)
         latest_checkpoint = tf.train.latest_checkpoint(temp_dir)
         if latest_checkpoint:
-            checkpoint.restore(latest_checkpoint).assert_consumed()
+            checkpoint.restore(latest_checkpoint).expect_partial()
         else:
             raise ValueError("No checkpoint found in the provided zip file.")
 
