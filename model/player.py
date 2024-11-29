@@ -14,6 +14,7 @@ from tf_agents.policies import random_tf_policy
 from environment import Environment, state_to_tensor, ActionDecoder
 from shared import INITIAL_STATE, History, RandomPlayer, strp_state, Color, State, Action, parse_yaml, AbstractPlayer, logger, training_logger, env_logger, MoveChecker
 from shared.consts import WIN_REWARD, INVALID_ACTION_PUNISHMENT, LOSS_REWARD, DRAW_REWARD
+from shared.heuristic import heuristic
 from .utils import ReplayMemory, DQNAgent, DQN
 from environment.utils import TablutCustomTFPolicy
 
@@ -218,7 +219,13 @@ class DQNPlayer(AbstractPlayer):
             return action
         except Exception as e:
             logger.error("Error during calculating move: %s", e)
-            return RandomPlayer(color=self.color).fit(state)
+            poss_moves = list(MoveChecker.gen_possible_moves(state))
+            values =[]
+            for move in poss_moves:
+                values.append(heuristic(state, move))
+            best_val = max(values)
+            best_move = poss_moves[values.index(best_val)]
+            return best_move
     
     def evaluate(self, num_episodes=10):
         """
