@@ -5,13 +5,19 @@
 import os
 
 import tensorflow as tf
+import pandas as pd
+from typing import List
+import matplotlib.pyplot as plt
 from tf_agents.trajectories import time_step as ts
 from tf_agents.policies import random_tf_policy
 
 from environment import Environment, state_to_tensor, ActionDecoder
 from shared import INITIAL_STATE, History, RandomPlayer, strp_state, Color, State, Action, parse_yaml, AbstractPlayer, logger, training_logger, env_logger, MoveChecker
-
+from shared.consts import WIN_REWARD, INVALID_ACTION_PUNISHMENT, LOSS_REWARD, DRAW_REWARD
+from shared.heuristic import heuristic
 from .utils import ReplayMemory, DQNAgent, DQN
+from environment.utils import TablutCustomTFPolicy
+
 
 _config_file_path = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -159,7 +165,8 @@ class DQNPlayer(AbstractPlayer):
                 optimizer,
                 epsilon_fn=epsilon_fn,
                 from_pretrained=from_pretrained
-                )
+            )
+        
             logger.debug("Agent successfully loaded from pretrained model %s", from_pretrained)
         else:
             self._agent = DQNAgent(
@@ -212,7 +219,13 @@ class DQNPlayer(AbstractPlayer):
             return action
         except Exception as e:
             logger.error("Error during calculating move: %s", e)
-            return RandomPlayer(color=self.color).fit(state)
+            poss_moves = list(MoveChecker.gen_possible_moves(state))
+            values =[]
+            for move in poss_moves:
+                values.append(heuristic(state, move))
+            best_val = max(values)
+            best_move = poss_moves[values.index(best_val)]
+            return best_move
     
     def evaluate(self, num_episodes=10):
         """
@@ -244,6 +257,26 @@ class DQNPlayer(AbstractPlayer):
         training_logger.debug("Policy evaluation complete. Average Reward = %.2f", float(average_reward))
         return float(average_reward)
     
+    def _save_and_plot_losses(self, train_losses: List[float], checkpoint_dir: str):
+        # Save losses to a CSV file
+        losses_df = pd.DataFrame(train_losses, columns=["Loss"])
+        losses_csv_path = os.path.join(checkpoint_dir, "training_losses.csv")
+        losses_df.to_csv(losses_csv_path, index=False)
+        training_logger.info("Training losses saved to %s", losses_csv_path)
+        
+        # Plot losses
+        plt.figure(figsize=(10, 6))
+        plt.plot(train_losses, label="Training Loss")
+        plt.xlabel("Iteration")
+        plt.ylabel("Loss")
+        plt.title("Training Loss Over Iterations")
+        plt.legend()
+        plt.grid(True)
+        plot_path = os.path.join(checkpoint_dir, "training_loss_plot.png")
+        plt.savefig(plot_path)
+        training_logger.info("Training loss plot saved to %s", plot_path)
+        plt.show()
+    
     def train(self):
         """
         Train the agent.
@@ -261,6 +294,8 @@ class DQNPlayer(AbstractPlayer):
             CONFIG["training"]["checkpoint_dir"]
         )
         
+        train_losses = []
+        
         # Ensure the checkpoint directory exists
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
@@ -273,7 +308,7 @@ class DQNPlayer(AbstractPlayer):
         training_logger.debug("Collecting initial data...")
         for _ in range(initial_dataset_size):
             self._replay_buffer.collect_step(
-                random_tf_policy.RandomTFPolicy(
+                TablutCustomTFPolicy(
                     self._env.time_step_spec(), self._env.action_spec()
                 )
             )
@@ -303,6 +338,7 @@ class DQNPlayer(AbstractPlayer):
             # Ensure tensors are float32 before training
             train_loss = self._agent.agent.train(experience).loss
             step = self._agent.agent.train_step_counter.numpy()
+            train_losses.append(train_loss)
 
             if step % log_interval == 0:
                 training_logger.debug("Step %d: Loss = %f", step, train_loss)
@@ -317,8 +353,23 @@ class DQNPlayer(AbstractPlayer):
                 training_logger.info("Evaluation at step %d: Average Reward = %.2f", step, average_reward)
                 
         training_logger.debug("Training completed.")
+        self._save_and_plot_losses(train_losses, checkpoint_dir)
+        
+    def _extract_statistics(self, rewards: List[float]):
+        rewards_wout_end = [r for r in rewards if r not in (WIN_REWARD, LOSS_REWARD, DRAW_REWARD, INVALID_ACTION_PUNISHMENT)]
             
-    def test(self, num_episodes = 1000):
+        statistics = {
+            "win": rewards.count(WIN_REWARD),
+            "draw": rewards.count(DRAW_REWARD),
+            "lose": rewards.count(LOSS_REWARD),
+            "invalid_action": rewards.count(INVALID_ACTION_PUNISHMENT),
+            "average": sum(rewards_wout_end) / len(rewards_wout_end)
+        }
+        logger.debug("Statistics: %s", statistics)
+        return statistics
+        
+            
+    def test(self, num_episodes = 100):
         """
         Tests the DQN agent in the given environment.
 
@@ -336,17 +387,17 @@ class DQNPlayer(AbstractPlayer):
         list
             A list of total rewards for each episode.
         """
-        total_rewards = []
+        rewards = []
 
         for _ in range(num_episodes):
             time_step = self._env.reset()
-            episode_reward = 0
+            # episode_reward = 0
 
             while not time_step.is_last():
                 action_step = self._agent.agent.policy.action(time_step)
                 time_step = self._env.step(action_step.action)
-                episode_reward += time_step.reward.numpy()
+                episode_reward = time_step.reward.numpy()
 
-            total_rewards.append(episode_reward)
-
-        return total_rewards
+                rewards.append(episode_reward[0])
+                
+        return self._extract_statistics(rewards)

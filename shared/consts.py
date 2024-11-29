@@ -119,13 +119,13 @@ WIN_TILES = [(0,1),(0,2),(0,6),(0,7),(1,0),(2,0),(6,0),(7,0),(8,1),(8,2),(8,6),(
 
 # These lines are defining constants for rewards and punishments in the Tablut game. Here's what each
 # constant represents:
-WIN_REWARD = 100
+WIN_REWARD = 20
 
-LOSS_REWARD = - 100
+LOSS_REWARD = - 20
 
-DRAW_REWARD = - 40
+DRAW_REWARD = - 1
 
-INVALID_ACTION_PUNISHMENT = - 300
+INVALID_ACTION_PUNISHMENT = - 20
 
 DEFENDER_NUM = 8
 

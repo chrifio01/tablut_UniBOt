@@ -43,6 +43,8 @@ from typing import Annotated, Tuple, List, Union
 from pydantic import BaseModel
 import numpy as np
 
+from shared.consts import CAMPS, WIN_TILES
+
 __all__ = ['Color', 'Piece', 'Board', 'Action', 'strp_board', 'strf_square', 'strp_square', 'strp_turn', 'Turn',
            'strp_color']
 
@@ -403,6 +405,26 @@ class Board:
         else:
             self.__pieces[from_indexes] = Piece.EMPTY
         self.__pieces[to_indexes] = moving_piece
+        
+        # Check for captures around the destination
+        adjacent_positions = [
+            (to_indexes[0] + 1, to_indexes[1]),
+            (to_indexes[0] - 1, to_indexes[1]),
+            (to_indexes[0], to_indexes[1] + 1),
+            (to_indexes[0], to_indexes[1] - 1),
+        ]
+
+        for pos in adjacent_positions:
+            if 0 <= pos[0] < self.__height and 0 <= pos[1] < self.__width:
+                captured_piece = self.get_piece(pos)
+
+                # Only check for captures of opponent's pieces
+                if action.turn == Turn.BLACK_TURN and captured_piece == Piece.DEFENDER:
+                    if self._is_a_capture(pos, captured_piece):
+                        self.__pieces[pos] = Piece.EMPTY
+                elif action.turn == Turn.WHITE_TURN and captured_piece == Piece.ATTACKER:
+                    if self._is_a_capture(pos, captured_piece):
+                        self.__pieces[pos] = Piece.EMPTY
 
     def get_piece(self, position: Tuple[int, int]) -> Piece:
         """
@@ -424,7 +446,88 @@ class Board:
             str: A string representation of the board.
         """
         return '\n'.join(''.join(piece.value for piece in row) for row in self.__pieces[::-1])
+    
+    def _is_a_capture(self, moving_piece_coords: Tuple[int, int], moving_piece_type: Piece) -> bool:
+        """
+        Checks if a piece at a given position is captured.
 
+        Args:
+            moving_piece_coords (Tuple[int, int]): The (row, column) position of the moving piece.
+            moving_piece_type (Piece): The type of the moving piece (ATTACKER, DEFENDER, or KING).
+
+        Returns:
+            bool: True if the piece is captured, False otherwise.
+        """
+        assert moving_piece_type in (Piece.ATTACKER, Piece.DEFENDER, Piece.KING)
+        
+        x, y = moving_piece_coords
+        adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        
+        def is_enemy_or_threat(pos: Tuple[int, int]) -> bool:
+            """Helper to determine if a position contains an enemy, throne, or camp."""
+            row, col = pos
+            if not (0 <= row < self.height and 0 <= col < self.width):
+                return False  # Out of bounds
+            piece = self.get_piece(pos)
+            if moving_piece_type == Piece.DEFENDER or moving_piece_type == Piece.KING:
+                return piece == Piece.ATTACKER or pos in CAMPS or piece == Piece.THRONE
+            elif moving_piece_type == Piece.ATTACKER:
+                return piece in {Piece.DEFENDER, Piece.KING}
+            return False
+
+        # Check surrounding positions to determine capture
+        threats_count = sum(is_enemy_or_threat(pos) for pos in adjacent_positions)
+
+        # Regular rules for Attackers and Defenders:
+        return threats_count >= 2
+    
+    def num_threats_to_piece(self, piece: tuple, piece_type: Piece) -> int:
+        """
+        Calculates the number of threats to a piece at a given position.
+
+        Args:
+            piece (tuple): Coordinates (row, column) of the piece to evaluate.
+            piece_type (Piece): Type of the piece (e.g., Piece.KING, Piece.DEFENDER).
+
+        Returns:
+            int: Number of threats (attackers or strategic blockers) adjacent to the piece.
+        """
+        x, y = piece
+        threats = 0
+        adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+
+        for pos in adjacent_positions:
+            if 0 <= pos[0] < self.__height and 0 <= pos[1] < self.__width:
+                threat_piece = self.get_piece(pos)
+                if piece_type == Piece.KING:
+                    if threat_piece in {Piece.ATTACKER, Piece.THRONE} or pos in CAMPS:
+                        threats += 1
+                elif piece_type == Piece.DEFENDER and threat_piece == Piece.ATTACKER:
+                    threats += 1
+        return threats
+    
+    def king_free_escape_routes(self, king_pos: tuple) -> int:
+        """
+        Evaluates the number of clear escape routes for the king.
+
+        Args:
+            king_pos (tuple): Coordinates (row, column) of the king.
+
+        Returns:
+            int: Number of clear escape routes for the king.
+        """
+        escape_routes = 0
+        escape_positions = [
+            (king_pos[0], self.width - 1),  # Right edge
+            (king_pos[0], 0),              # Left edge
+            (self.height - 1, king_pos[1]),  # Bottom edge
+            (0, king_pos[1])               # Top edge
+        ]
+        for pos in escape_positions:
+            if self.is_there_a_clear_view(king_pos, pos):
+                escape_routes += 1
+        return escape_routes
+    
     def king_pos(self):
         """
         Return the king position on the board as a tuple of two elements.
@@ -482,6 +585,32 @@ class Board:
         return [(i, j) for i in range(self.__pieces.shape[0]) for j in range(self.__pieces.shape[1]) if
                 self.__pieces[i, j] == Piece.ATTACKER]
 
+    def is_tile_free(self, tile):
+        # Check if the specified tile is free (not occupied by any piece)
+        row, col = tile
+        return self.__pieces[row][col] == Piece.EMPTY
+    
+    def king_proximity_to_escape(self):
+        """
+        Calculate the minimum Manhattan distance from the king to the escape (WIN) tiles.
+        
+        Returns:
+            int: The minimum Manhattan distance to the closest escape tile, or float('inf') if no escape tiles are reachable.
+        """
+        king_position = self.king_pos()
+        min_distance = float('inf')  # Start with an infinitely large distance
+        
+        # Iterate over each WIN TILE to calculate proximity
+        for tile in WIN_TILES:
+            if self.is_tile_free(tile):  # Only consider free WIN TILES
+                manhattan_distance = abs(king_position[0] - tile[0]) + abs(king_position[1] - tile[1])
+                
+                # Update minimum distance if the current one is smaller
+                if manhattan_distance < min_distance:
+                    min_distance = manhattan_distance
+
+        # Return the minimum distance found or float('inf') if no valid tiles were found
+        return min_distance if min_distance != float('inf') else None
 
 def parse_state_board(state_board: List[List[str]]) -> Board:
     """

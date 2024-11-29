@@ -6,88 +6,68 @@ The main heuristic function integrates move validation and calculates a heuristi
 """
 
 from shared.utils.env_utils import king_distance_from_center, king_surrounded, position_weight, pawns_around, State
-from shared.utils.game_utils import Action, Board, Turn
+from shared.utils.game_utils import Action, Board, Turn, Piece
 from .move_checker import MoveChecker
 from .consts import ALPHA_W, BETA_W, GAMMA_W, THETA_W, EPSILON_W, OMEGA_W, ALPHA_B, BETA_B, GAMMA_B, THETA_B, INVALID_ACTION_PUNISHMENT
 from .exceptions import InvalidAction
 
 
 
-def _white_heuristic(board: Board):
+def _white_heuristic(board: Board) -> float:
     """
-    Returns the float value of the current state of the board for white
+    Heuristic function for evaluating the state for White.
+
+    Args:
+        board (Board): The current game board.
+
+    Returns:
+        float: Heuristic score favoring White.
     """
-
-
-
     king_pos = board.king_pos()
+    score = 0
+
+    # Reward king's proximity to escape routes
+    score += position_weight(king_pos)
+
+    # Penalize threats around the king
+    threats = board.num_threats_to_piece(king_pos, Piece.KING)
+    score -= threats
+
+    # Reward clear escape routes
+    escape_routes = board.king_free_escape_routes(king_pos)
+    score += escape_routes
+
+    # Adjust for the number of active white pieces
+    score += board.num_white()
+
+    return float(score)
 
 
-    fitness = 0
-
-    # Blackpieces
-    num_blacks = board.num_black()
-    fitness -= ALPHA_W * num_blacks
-
-    # whitepieces
-    num_whites = board.num_white()
-    fitness += BETA_W * num_whites
-
-    # king distance
-    fitness += king_distance_from_center(board, king_pos) * GAMMA_W
-    
-    # free ways
-    free_paths = [board.is_there_a_clear_view(black_pawn, king_pos)
-                  for black_pawn in board.get_black_coordinates()]
-    # theta0 times the n° free ways to king
-    fitness -= OMEGA_W * sum(free_paths)
-
-    # king surrounded
-    king_vals, _ = king_surrounded(board)
-    fitness -= king_vals * THETA_W
-
-    fitness += position_weight(king_pos) * EPSILON_W # Return maximum values when king is in escape tiles !!WIN CONFIG!!
-
-    return fitness
-
-
-def _black_heuristic(board: Board):
+def _black_heuristic(board: Board) -> float:
     """
-    Black heuristics should be based on:
-    - Number of black pawns
-    - Number of white pawns
-    - Number of black pawns next to the king
-    - Free path to the king
-    - A coefficient of encirclement of the king
+    Heuristic function for evaluating the state for Black.
+
+    Args:
+        board (Board): The current game board.
+
+    Returns:
+        float: Heuristic score favoring Black.
     """
-
-
-
-    fitness = 0
-
-
-
     king_pos = board.king_pos()
+    score = 0
 
-    # Number of black pawns
-    num_blacks = board.num_black()
-    fitness += ALPHA_B * num_blacks
+    # Reward surrounding the king
+    threats = board.num_threats_to_piece(king_pos, Piece.KING)
+    score += threats
 
-    # Number of white pawns
-    num_whites = board.num_white()
-    fitness -= BETA_B * num_whites
+    # Penalize king's clear escape routes
+    escape_routes = board.king_free_escape_routes(king_pos)
+    score -= escape_routes
 
-    # Number of black pawns next to the king
-    fitness += GAMMA_B * pawns_around(board, king_pos, distance=1)  # Maximum value for king surrounded on all 4 sides !!WIN CONFIG!!
+    # Adjust for the number of active black pieces
+    score += board.num_black() // 2
 
-    # Free path to the king
-    free_paths = [board.is_there_a_clear_view(black_pawn, king_pos)
-                  for black_pawn in board.get_black_coordinates()]
-    # theta0 times the n° free ways to king
-    fitness += THETA_B * sum(free_paths)
-
-
-    return fitness
+    return float(score)
 
 
 
@@ -111,9 +91,9 @@ def heuristic(state: State, move: Action):
 
 
         if move.turn == Turn.WHITE_TURN:
-            return _white_heuristic(board) - _black_heuristic(board)
+            return _white_heuristic(board)
         if move.turn == Turn.BLACK_TURN:
-            return _black_heuristic(board) - _white_heuristic(board)
+            return _black_heuristic(board)
         return None
     except InvalidAction:
         # If the move is invalid, return a very low value to avoid the move from being chosen

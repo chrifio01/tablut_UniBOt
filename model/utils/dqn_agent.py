@@ -79,30 +79,21 @@ class DQNAgent:
             )
             self.agent.initialize()
 
-    def _load(self, zipped_checkpoint_path: str, tf_env, q_network, optimizer, epsilon_fn, 
+    def _load(self, checkpoints_dir_path: str, tf_env, q_network, optimizer, epsilon_fn, 
               target_update_period, td_errors_loss_fn, gamma, train_step_counter) -> DqnAgent:
         """
         Loads a pretrained DQN agent from a zipped checkpoint file.
 
         Parameters
         ----------
-        zipped_checkpoint_path : str
-            The path to the checkpoint file in a zipped format.
+        checkpoints_dir_path : str
+            The path to the checkpoint dir.
 
         Returns
         -------
         DqnAgent
             The loaded pretrained DQN agent.
         """
-        # Unzip the checkpoint to a temporary directory
-        temp_dir = "/tmp/dqn_checkpoint"
-        if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir)  # Clean up if directory exists
-        os.makedirs(temp_dir, exist_ok=True)
-
-        with zipfile.ZipFile(zipped_checkpoint_path, 'r') as zip_ref:
-            zip_ref.extractall(temp_dir)
-
         # Initialize a temporary agent to restore the state
         temp_agent = DqnAgent(
             tf_env.time_step_spec(),
@@ -119,10 +110,10 @@ class DQNAgent:
 
         # Restore the agent from the checkpoint
         checkpoint = tf.train.Checkpoint(agent=temp_agent)
-        latest_checkpoint = tf.train.latest_checkpoint(temp_dir)
+        latest_checkpoint = tf.train.latest_checkpoint(checkpoints_dir_path)
         if latest_checkpoint:
-            checkpoint.restore(latest_checkpoint).assert_consumed()
+            checkpoint.restore(latest_checkpoint).expect_partial()
         else:
-            raise ValueError("No checkpoint found in the provided zip file.")
+            raise ValueError("No checkpoint found in the provided directory %s.", checkpoints_dir_path)
 
         return temp_agent

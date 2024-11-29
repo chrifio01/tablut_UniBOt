@@ -23,6 +23,10 @@ from pydantic import BaseModel
 from shared.consts import WEIGHTS, CAMPS
 from .game_utils import Board, strp_board, Piece, strp_turn, parse_state_board, Turn, Color
 
+from tensorflow.python.ops.numpy_ops import np_config
+np_config.enable_numpy_behavior()
+
+
 __all__ = ['State', 'strp_state', 'state_decoder']
 
 
@@ -114,6 +118,7 @@ def king_distance_from_center(board: Board, king: tuple[int, int]):
     return sqrt((king[0] - (board.height // 2)) ** 2 + (king[1] - (board.width // 2)) ** 2)
 
 
+
 def king_surrounded(board: Board):
     """
     Return the number of sides in which the king is surrounded by an enemy (max(c) = 4)
@@ -128,22 +133,22 @@ def king_surrounded(board: Board):
 
     if king[0] + 1 >= board.height:
         c += 1
-    elif board.get_piece((king[0] + 1, king[1])) == Piece.ATTACKER:
+    elif board.get_piece((king[0] + 1, king[1])) in (Piece.ATTACKER, Piece.THRONE) or (king[0] + 1, king[1]) in CAMPS:
         c += 1
         blocked_pos.append((king[0] + 1, king[1]))
     if king[0] - 1 < 0:
         c += 1
-    elif board.get_piece((king[0] - 1, king[1])) == Piece.ATTACKER:
+    elif board.get_piece((king[0] - 1, king[1])) in (Piece.ATTACKER, Piece.THRONE)  or (king[0] - 1, king[1]) in CAMPS:
         c += 1
         blocked_pos.append((king[0] - 1, king[1]))
     if king[1] + 1 >= board.width:
         c += 1
-    elif board.get_piece((king[0], king[1] + 1)) == Piece.ATTACKER:
+    elif board.get_piece((king[0], king[1] + 1)) in (Piece.ATTACKER, Piece.THRONE) or (king[0], king[1] + 1) in CAMPS:
         c += 1
         blocked_pos.append((king[0], king[1] + 1))
     if king[1] - 1 < 0:
         c += 1
-    elif board.get_piece((king[0], king[1] - 1)) == Piece.ATTACKER:
+    elif board.get_piece((king[0], king[1] - 1)) in (Piece.ATTACKER, Piece.THRONE) or (king[0], king[1] - 1) in CAMPS:
         c += 1
         blocked_pos.append((king[0], king[1] - 1))
 
@@ -196,6 +201,64 @@ def piece_parser(piece: Piece) -> int:
                     Piece.THRONE: 3}
     return state_pieces[piece]
 
+class StateDecoder:
+    """
+    Decodes a tensor representation of a state into a State object and additional information.
+
+    Methods:
+        decode(state_tensor: np.ndarray, player_color: Color) -> Tuple[State, Color]:
+            Decodes a tensor into a State object and the player's color.
+    """
+
+    @staticmethod
+    def decode(state_tensor: np.ndarray) -> State:
+        """
+        Decode a tensor representation back into a State object.
+
+        Args:
+            state_tensor (np.ndarray): The tensor representation of the state.
+            player_color (Color): The color of the player for whom the state was featurized.
+
+        Returns:
+            Tuple[State, Color]: The decoded State object and the player's color.
+        """
+        # Ensure the input is converted into a NumPy array
+        state_tensor_l = state_tensor.tolist()[0]
+
+        # Define sizes for slicing
+        flattened_board_size = 4 * 9 * 9  # 324
+
+        # Extract the board input and reshape
+        board_input = np.array(state_tensor_l[:flattened_board_size]).reshape((4, 9, 9)).astype(bool)
+
+        # Extract turn information
+        turn_input = state_tensor_l[flattened_board_size:flattened_board_size + 1]
+        is_white_turn = bool(turn_input[0])
+
+        # Determine whose turn it is based on the input
+        turn_color = Turn.WHITE_TURN if is_white_turn else Turn.BLACK_TURN
+
+        # Reverse map the board representation
+        board = np.full((9, 9), Piece.EMPTY, dtype=Piece)  # Initialize an empty board
+        for i in range(9):
+            for j in range(9):
+                if board_input[piece_parser(Piece.KING)][i, j]:
+                    board[i, j] = Piece.KING
+                elif board_input[piece_parser(Piece.DEFENDER)][i, j]:
+                    board[i, j] = Piece.DEFENDER
+                elif board_input[piece_parser(Piece.ATTACKER)][i, j]:
+                    board[i, j] = Piece.ATTACKER
+            
+        if board[9//2] [9//2] != Piece.KING:
+            board[9//2][9//2] = Piece.THRONE
+
+        # Create a State object using the reconstructed board
+        decoded_board = Board(board)
+        decoded_state = State(board=decoded_board, turn=turn_color)
+
+        # Return the decoded state and player color
+        return decoded_state
+    
 class FeaturizedState(BaseModel):
     """
     Model representing the featurized state of the Tablut game for input into the DQN.
@@ -246,7 +309,7 @@ class StateFeaturizer:
                 try:
                     position = (i, j)
                     piece = piece_parser(Piece(board.get_piece(position)))
-                    position_layer[piece][-i - 1, j] = True
+                    position_layer[piece][i, j] = True
                 except KeyError:
                     pass
 
@@ -262,24 +325,54 @@ class StateFeaturizer:
         return FeaturizedState(board_input=position_layer, turn_input=turn_layer, white_input=w_heur_layer, black_input=b_heur_layer)
 
 
-def black_win_con(board: Board, king: tuple[int, int]):
+def black_win_con(board: Board, king: tuple[int, int]) -> bool:
     """
-    Black player win condition is satisfied when the value of this function is 4, the king is surrounded on every side
+    Determines if the Black player captures the King.
 
-    Arg:
-    Board object
-    The king position as a tuple of int
+    Args:
+        board (Board): The board object representing the game state.
+        king (tuple[int, int]): The position of the King as a (row, column) tuple.
 
-    Return:
-    The number of blocked sides of the king
+    Returns:
+        bool: True if the Black player captures the King, False otherwise.
     """
     x, y = king
-    count = 0
     adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    blockers = []  # List of what's blocking each side
 
     for pos in adjacent_positions:
         if 0 <= pos[0] < board.height and 0 <= pos[1] < board.width:
-            if pos in board.get_black_coordinates() or board.get_piece(pos) in {Piece.THRONE, Piece.CAMPS, Piece.ATTACKER}:
-                count += 1
+            piece = board.get_piece(pos)
+            if piece in {Piece.ATTACKER, Piece.THRONE} or pos in CAMPS:
+                blockers.append((pos, piece))
 
-    return count
+    # Condition 1: Surrounded by Attackers on all four sides
+    if all(block[1] == Piece.ATTACKER for block in blockers) and len(blockers) == 4:
+        return True
+
+    # Condition 2: Adjacent to the Throne, blocked on the other three sides by Attackers
+    throne_adjacent = any(block[1] == Piece.THRONE for block in blockers)
+    if throne_adjacent and len(blockers) == 4 and sum(block[1] == Piece.ATTACKER for block in blockers) == 3:
+        return True
+
+    # Condition 3: Adjacent to a Camp, opposite side is an Attacker, other two sides are Attackers
+    for block in blockers:
+        if block[0] in CAMPS:
+            camp_pos = block[0]
+
+            # Calculate the opposite position
+            if camp_pos[0] == x:  # Camp is along the same row
+                opposite_pos = (x, 2 * y - camp_pos[1])
+            elif camp_pos[1] == y:  # Camp is along the same column
+                opposite_pos = (2 * x - camp_pos[0], y)
+            else:
+                continue  # Skip if camp is not directly adjacent
+
+            # Validate the opposite position and check the capture condition
+            if (0 <= opposite_pos[0] < board.height and
+                0 <= opposite_pos[1] < board.width and
+                board.get_piece(opposite_pos) == Piece.ATTACKER):
+                return True
+
+    # If none of the conditions are met, the King is not captured
+    return False

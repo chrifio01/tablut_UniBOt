@@ -261,7 +261,7 @@ class Environment(PyEnvironment):
 
     def _did_black_win(self) -> bool:
         """Check if black has won."""
-        if black_win_con(self.current_state.board, self.current_state.board.king_pos()) == 4:
+        if black_win_con(self.current_state.board, self.current_state.board.king_pos()):
             return True
         if self.current_state.turn == Turn.WHITE_TURN:
             if not list(MoveChecker.gen_possible_moves(self.current_state)):
@@ -291,6 +291,8 @@ class Environment(PyEnvironment):
 
     def _calculate_rewards(self, current_state: State, action_performed: Action):
         """Calculate rewards based on the current state and action."""
+        if action_performed is None:
+            return INVALID_ACTION_PUNISHMENT
         return self.reward_function(current_state, action_performed)
 
     def _update_history(self, match_id: str, state: State, action=None, reward=None):
