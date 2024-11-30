@@ -49,7 +49,7 @@ else
   export WEBSOCKET_PORT=5801
 fi
 
-source .venv/bin/activate
+. .venv/bin/activate
 
 echo "Starting client..."
 sleep 2
