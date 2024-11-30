@@ -49,7 +49,7 @@ else
   export WEBSOCKET_PORT=5801
 fi
 
-. .venv/bin/activate
+conda activate tablut
 
 echo "Starting client..."
 sleep 2
