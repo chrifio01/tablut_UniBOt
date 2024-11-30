@@ -49,10 +49,10 @@ else
   export WEBSOCKET_PORT=5801
 fi
 
+source .venv/bin/activate
+
 echo "Starting client..."
 sleep 2
-
-source .venv/bin/activate
 
 # Run the main.py script with the configured environment variables
 python main.py $DEBUG_FLAG
