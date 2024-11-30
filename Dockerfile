@@ -7,7 +7,7 @@ RUN mkdir app/
 WORKDIR /app/
 
 # copy requirements
-COPY ../requirements.deploy.txt .
+COPY ./requirements.deploy.txt .
 
 # install dependencies
 RUN pip install -r requirements.deploy.txt --no-cache-dir
