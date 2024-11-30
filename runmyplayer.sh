@@ -52,5 +52,7 @@ fi
 echo "Starting client..."
 sleep 2
 
+source .venv/bin/activate
+
 # Run the main.py script with the configured environment variables
 python main.py $DEBUG_FLAG
